@@ -11,11 +11,8 @@ class Grid(MultiGrid):
 
 
 
-    def get_neighbors_apt(self, pos, include_center=True):
+    def get_neighbors(self, pos, include_center=False):
         """Get neighbors of a given position moore neighborhood."""
         return super().get_neighbors(pos, include_center=include_center, moore=True)
     
-    def get_neighbors_house(self, pos, include_center=False):
-        """Get neighbors of a given position moore neighborhood."""
-        return super().get_neighbors(pos, include_center=include_center, moore=True)
     

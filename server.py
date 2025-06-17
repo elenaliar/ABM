@@ -1,41 +1,60 @@
 from mesa.visualization.modules import CanvasGrid
 from mesa.visualization.ModularVisualization import ModularServer
+from mesa.visualization.modules import ChartModule
 from city import CityModel
 from household import Household
 
-def household_portrayal(agent):
+# Portrayal function to visualize household agents
+def agent_portrayal(agent):
     if agent is None:
         return
 
-    portrayal = {
-        "Shape": "rect",
-        "w": 0.8,
-        "h": 0.8,
-        "Filled": "true",
-        "Layer": 0,
-    }
-
-
-    # Set color based on income and type
+    portrayal = {"Shape": "circle", "Filled": "true", "r": 0.5}
+    
+    # Color by income level
     if agent.income == 1:
-        portrayal["Color"] = "yellow"
+        color = "red"       # Low income
     elif agent.income == 2:
-        portrayal["Color"] = "orange"
+        color = "orange"    # Mid income
     else:
-        portrayal["Color"] = "red"
+        color = "green"     # High income
 
-    if agent.type == 1:  # House
-        portrayal["Shape"] = "circle"
-    elif agent.type == 2:  # Apartment
-        portrayal["Shape"] = "rect"
+    # Darker color if solar panels are installed
+    if agent.solar_panels == 1:
+        color = "blue"
 
+    portrayal["Color"] = color
+    portrayal["Layer"] = 0
     return portrayal
 
-grid = CanvasGrid(household_portrayal, 100, 100, 500, 500)
+# Create the CanvasGrid for visualization
+grid_width = 120
+grid_height = 120
+canvas_element = CanvasGrid(agent_portrayal, grid_width, grid_height, 600, 600)
 
+# Optional: Chart to show proportion of solar panel adoption over time
+chart = ChartModule([
+    {"Label": "Solar Adoption", "Color": "blue"}
+])
+
+# Define model parameters for the UI
+model_params = {
+    "width": grid_width,
+    "height": grid_height,
+    "num_agents": 10000,  # adjust as needed
+    "subsidy": 0  # 0 = no subsidy, 1 = subsidy available
+}
+
+# Create the ModularServer
 server = ModularServer(
     CityModel,
-    [grid],
-    "City Model",
-    {"width": 100, "height": 100, "num_agents": 10000}
+    [canvas_element],
+    "Solar Panel Adoption Simulation",
+    model_params
 )
+
+# Launch the server
+if __name__ == "__main__":
+    server.port = 8521  # Default Mesa port
+    server.launch()
+

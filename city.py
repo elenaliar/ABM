@@ -2,16 +2,26 @@ from mesa import Model
 from household import Household
 from grid import Grid
 from mesa.time import RandomActivation  # Or another scheduler
+from mesa.datacollection import DataCollector
 import random
 from random import choice
 random.seed(42)  # For reproducibility
 
 class CityModel(Model):
-    def __init__(self, width, height, num_agents):
+    def __init__(self, width, height, num_agents, subsidy=0):
         self.num_agents = num_agents
         self.grid = Grid(width, height)
         self.schedule = RandomActivation(self)
-
+        self.subsidy = subsidy  # Subsidy flag, 0 if government does not provide subsidy, 1 if it does
+        self.running = True
+        self.datacollector = DataCollector(
+        model_reporters={
+        "Low Income Solar": lambda m: sum(1 for a in m.schedule.agents if a.income == 1 and a.solar_panels == 1),
+        "Mid Income Solar": lambda m: sum(1 for a in m.schedule.agents if a.income == 2 and a.solar_panels == 1),
+        "High Income Solar": lambda m: sum(1 for a in m.schedule.agents if a.income == 3 and a.solar_panels == 1),
+        }
+        )
+        self.first_step = True  # Flag to track the first step of the model
         # Divide the grid into quadrants for neighborhoods
         mid_x = width // 2
         mid_y = height // 2
@@ -66,7 +76,40 @@ class CityModel(Model):
             #same for stubbornness factor
             agent.set_stubborness_factor(random.uniform(0, 1))
 
+            if income == 1:
+                agent.set_subsidy(1 if self.subsidy == 1 else 0)  # low income households get subsidy if available
+            elif income == 2:
+                # set subsidy with probability 50%
+                agent.set_subsidy(1 if random.random() < 0.5 and self.subsidy == 1 else 0)
+            else:
+                agent.set_subsidy(0)
+
 
             self.grid.place_agent(agent, (x, y))
             self.schedule.add(agent)
             next_id += 1
+    
+
+    def step(self):
+        """Advance the model by one step."""
+        if self.first_step:
+            self.datacollector.collect(self)
+            self.first_step = False
+        agents = self.schedule._agents
+        agent_keys = list(agents.keys())
+        for key in agent_keys:
+            if key in agents:
+                agents[key].step(self.grid, self)
+        self.datacollector.collect(self)
+
+    
+    def run_model(self, steps=100):
+        """Run the model for a specified number of steps."""
+        for i in range(steps):
+            self.step()
+            if not self.running:
+                break
+
+
+        
+
