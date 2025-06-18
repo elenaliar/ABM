@@ -1,6 +1,8 @@
 #class for household agent
 from mesa import Agent
 import numpy as np
+from scipy.stats import norm
+
 
 
 class Household(Agent):
@@ -11,6 +13,7 @@ class Household(Agent):
         self.income = 0 # 1: low income, 2: mid income, 3: high income
         self.stubborness_factor = 0
         self.environmental_consciousness = 0
+        self.education_level = 0 # 1: low education, 2: high school, 3: university
         self.type = 0 # 1: house, 2:apartment
         self.future_awareness = 0
         self.solar_panels = 0 # 0: no solar panels, 1: solar panels installed
@@ -31,6 +34,9 @@ class Household(Agent):
     def set_future_awareness(self, awareness):
         """Set the future awareness of the household"""
         self.future_awareness = awareness
+    def set_education_level(self, level):
+        """Set the education level of the household"""
+        self.education_level = level
     def set_solar_panels(self, solar_panels):
         """Set the solar panels of the household"""
         self.solar_panels = solar_panels
@@ -51,11 +57,17 @@ class Household(Agent):
         neighbours = self.get_neighbours(grid)
         solar_neighbors = [n for n in neighbours if n.solar_panels == 1]
         fraction_with_solar = len(solar_neighbors) / len(neighbours) if neighbours else 0
-         # GET WEIGHTS FOR THIS FUNCTION - MAYBE USE ACTUAL DATA
-        if citymodel.subsidy == 1:
-            utility = self.income / 3 + self.environmental_consciousness  + fraction_with_solar - self.stubborness_factor
-        else:
-            utility = self.income / 3 + self.environmental_consciousness  + fraction_with_solar - self.stubborness_factor
+        beta1 = 0.4
+        beta2 = 0.1
+        beta3 = 0.25
+        beta4 = 0.25
+        beta5 = 0.35
+        beta6 = 0.10
+        beta7 = 0.65
+
+        noise = np.random.normal(0, 0.5) # Creating noise from a normal distribution
+
+        utility = beta1 * (self.income / 3) + beta2 * self.environmental_consciousness  + beta3 * fraction_with_solar - beta4 * self.stubborness_factor + beta5 * (self.education_level/3) + beta6 * self.subsidy * citymodel.subsidy + beta7 * (1 - self.type) + noise
         return utility
     
     def step(self, grid, citymodel):
@@ -64,10 +76,10 @@ class Household(Agent):
         if self.solar_panels == 1:
             return
         utility = self.utility(grid, citymodel)
-        beta = 1.5 # controls stepness of the logistic curve
-        prob_installation = 1 / (1 + np.exp(-beta * (utility)))
-        if 0.9 < prob_installation:
+        # Input utility into a standard normal distribution to get probability of installation
+        prob_installation = norm.cdf(utility)
+
+        if 0.95 < prob_installation:
             self.solar_panels = 1
-            print(f"Household {self.unique_id} installed solar panels with utility {utility:.2f} and probability {prob_installation:.2f}")
 
 
