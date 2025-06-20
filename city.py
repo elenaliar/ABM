@@ -6,9 +6,13 @@ from mesa.datacollection import DataCollector
 import random
 from random import choice
 random.seed(42)  # For reproducibility
+import numpy as np
 
 class CityModel(Model):
-    def __init__(self, width, height, num_agents, subsidy=0, subsidy_timestep=0):
+    def __init__(self, width, height, num_agents, subsidy=0, subsidy_timestep=0, seed=None):
+        if seed is not None:
+            random.seed(seed)
+            np.random.seed(seed)
         self.num_agents = num_agents
         self.grid = Grid(width, height)
         self.schedule = RandomActivation(self)
@@ -85,17 +89,22 @@ class CityModel(Model):
                 self.incomes[1]["count"] += 1
                     
                 agent_type = random.choices([1, 2], weights=[0.2, 0.8])[0] # 20% chance of house, 80% chance of apartment
-                if agent_type == 1:
-                    self.incomes[1]["houses"] += 1
-                else:
-                    self.incomes[1]["apartments"] += 1
 
                 if agent_type == 1 and not self.grid.is_cell_empty((x, y)):
-                    # if the cell x,y is an agent with agent type = 2, put the agent as apartment
-                    x, y = self.random.randrange(x_min, x_max), self.random.randrange(y_min, y_max)
-                    while not self.grid.is_cell_empty((x, y)):
-                        x, y = self.random.randrange(x_min, x_max), self.random.randrange(y_min, y_max)
-                    agent.set_type(agent_type)
+                    max_tries = 100
+                    placed = False
+                    for _ in range(max_tries):
+                        x_try, y_try = self.random.randrange(x_min, x_max), self.random.randrange(y_min, y_max)
+                        if self.grid.is_cell_empty((x_try, y_try)):
+                            x, y = x_try, y_try
+                            placed = True
+                            break
+                    if not placed:
+                        # Fallback to apartment
+                        agent_type = 2
+                        agent.set_type(agent_type)
+                    else:
+                        agent.set_type(agent_type)
 
                 elif agent_type == 2 and not self.grid.is_cell_empty((x, y)):
                     if self.grid.get_cell_list_contents((x, y))[0].type == 1:
@@ -106,6 +115,10 @@ class CityModel(Model):
                         agent.set_type(agent_type)
                     elif self.grid.get_cell_list_contents((x, y))[0].type == 2:
                         agent.set_type(agent_type)
+                if agent_type == 1:
+                    self.incomes[1]["houses"] += 1
+                else:
+                    self.incomes[1]["apartments"] += 1
 
         
             elif income == 2:
@@ -115,17 +128,22 @@ class CityModel(Model):
                 self.incomes[2]["count"] += 1
 
                 agent_type = random.choices([1, 2], weights=[0.5, 0.5])[0] # 50% chance of house, 50% chance of apartment
-                if agent_type == 1:
-                    self.incomes[2]["houses"] += 1
-                else:
-                    self.incomes[2]["apartments"] += 1
 
                 if agent_type == 1 and not self.grid.is_cell_empty((x, y)):
-                    x, y = self.random.randrange(x_min, x_max), self.random.randrange(y_min, y_max)
-                    while not self.grid.is_cell_empty((x, y)):
-                        x, y = self.random.randrange(x_min, x_max), self.random.randrange(y_min, y_max)
-                    agent.set_type(agent_type)
-
+                    max_tries = 100
+                    placed = False
+                    for _ in range(max_tries):
+                        x_try, y_try = self.random.randrange(x_min, x_max), self.random.randrange(y_min, y_max)
+                        if self.grid.is_cell_empty((x_try, y_try)):
+                            x, y = x_try, y_try
+                            placed = True
+                            break
+                    if not placed:
+                        # Fallback to apartment
+                        agent_type = 2
+                        agent.set_type(agent_type)
+                    else:
+                        agent.set_type(agent_type)
                 elif agent_type == 2 and not self.grid.is_cell_empty((x, y)):
                     if self.grid.get_cell_list_contents((x, y))[0].type == 1:
                         x, y = self.random.randrange(x_min, x_max), self.random.randrange(y_min, y_max)
@@ -135,6 +153,10 @@ class CityModel(Model):
                         agent.set_type(agent_type)
                     elif self.grid.get_cell_list_contents((x, y))[0].type == 2:
                         agent.set_type(agent_type)
+                if agent_type == 1:
+                    self.incomes[2]["houses"] += 1
+                else:
+                    self.incomes[2]["apartments"] += 1
             
             else:
                 agent.set_subsidy(0)
@@ -143,16 +165,21 @@ class CityModel(Model):
                 self.incomes[3]["count"] += 1
 
                 agent_type = random.choices([1, 2], weights=[0.8, 0.2])[0] # 80% chance of house, 20% chance of apartment
-                if agent_type == 1:
-                    self.incomes[3]["houses"] += 1
-                else:
-                    self.incomes[3]["apartments"] += 1
-
                 if agent_type == 1 and not self.grid.is_cell_empty((x, y)):
-                    x, y = self.random.randrange(x_min, x_max), self.random.randrange(y_min, y_max)
-                    while not self.grid.is_cell_empty((x, y)):
-                        x, y = self.random.randrange(x_min, x_max), self.random.randrange(y_min, y_max)
-                    agent.set_type(agent_type)
+                    max_tries = 100
+                    placed = False
+                    for _ in range(max_tries):
+                        x_try, y_try = self.random.randrange(x_min, x_max), self.random.randrange(y_min, y_max)
+                        if self.grid.is_cell_empty((x_try, y_try)):
+                            x, y = x_try, y_try
+                            placed = True
+                            break
+                    if not placed:
+                        # Fallback to apartment
+                        agent_type = 2
+                        agent.set_type(agent_type)
+                    else:
+                        agent.set_type(agent_type)
 
                 elif agent_type == 2 and not self.grid.is_cell_empty((x, y)):
                     if self.grid.get_cell_list_contents((x, y))[0].type == 1:
@@ -163,6 +190,11 @@ class CityModel(Model):
                         agent.set_type(agent_type)
                     elif self.grid.get_cell_list_contents((x, y))[0].type == 2:
                         agent.set_type(agent_type)
+                if agent_type == 1:
+                    self.incomes[3]["houses"] += 1
+                else:
+                    self.incomes[3]["apartments"] += 1
+
             
             self.grid.place_agent(agent, (x, y))
             self.schedule.add(agent)
