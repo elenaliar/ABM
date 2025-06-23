@@ -9,10 +9,9 @@ random.seed(42)  # For reproducibility
 import numpy as np
 
 class CityModel(Model):
-    def __init__(self, width, height, num_agents, subsidy=0, subsidy_timestep=0, seed=None):
-        if seed is not None:
-            random.seed(seed)
-            np.random.seed(seed)
+    def __init__(self, width=120, height=120, num_agents=10000, subsidy=1, subsidy_timestep=0, 
+             income=None, env_consciousness=None, stubbornness=None, education=None, sa=True, household_type=None, subsidy_eligibility=None):
+
         self.num_agents = num_agents
         self.grid = Grid(width, height)
         self.schedule = RandomActivation(self)
@@ -27,184 +26,215 @@ class CityModel(Model):
             3: {"count": 0, "houses": 0, "apartments": 0}
         }
 
-        self.datacollector = DataCollector(
-        model_reporters={
-        "Low Income Solar House": lambda m: sum(1 for a in m.schedule.agents if a.income == 1 and a.solar_panels == 1 and a.type == 1),
-        "Low Income Solar Apartment": lambda m: sum(1 for a in m.schedule.agents if a.income == 1 and a.solar_panels == 1 and a.type == 2),
-        "Mid Income Solar House": lambda m: sum(1 for a in m.schedule.agents if a.income == 2 and a.solar_panels == 1 and a.type == 1),
-        "Mid Income Solar Apartment": lambda m: sum(1 for a in m.schedule.agents if a.income == 2 and a.solar_panels == 1 and a.type == 2),
-        "High Income Solar House": lambda m: sum(1 for a in m.schedule.agents if a.income == 3 and a.solar_panels == 1 and a.type == 1),
-        "High Income Solar Apartment": lambda m: sum(1 for a in m.schedule.agents if a.income == 3 and a.solar_panels == 1 and a.type == 2),
-        }
-        )
+        if not sa:
+            self.datacollector = DataCollector(
+                model_reporters={
+                "Low Income Solar House": lambda m: sum(1 for a in m.schedule.agents if a.income == 1 and a.solar_panels == 1 and a.type == 1),
+                "Low Income Solar Apartment": lambda m: sum(1 for a in m.schedule.agents if a.income == 1 and a.solar_panels == 1 and a.type == 2),
+                "Mid Income Solar House": lambda m: sum(1 for a in m.schedule.agents if a.income == 2 and a.solar_panels == 1 and a.type == 1),
+                "Mid Income Solar Apartment": lambda m: sum(1 for a in m.schedule.agents if a.income == 2 and a.solar_panels == 1 and a.type == 2),
+                "High Income Solar House": lambda m: sum(1 for a in m.schedule.agents if a.income == 3 and a.solar_panels == 1 and a.type == 1),
+                "High Income Solar Apartment": lambda m: sum(1 for a in m.schedule.agents if a.income == 3 and a.solar_panels == 1 and a.type == 2),
+                }
+            )
 
-        # Define 9 rectangular neighborhoods (can be uneven)
-        neighborhoods = [
-            {"x_range": (0, 84), "y_range": (0, 64), "income_dist": [1, 2, 3], "weights": [0.85, 0.15, 0.0]},     # 57x38
-            {"x_range": (84, 120), "y_range": (66, 120), "income_dist": [1, 2, 3], "weights": [0.6, 0.39, 0.01]},     # 36x54
-            {"x_range": (0, 39), "y_range": (38, 64), "income_dist": [1, 2, 3], "weights": [0.75, 0.25, 0.0]},    # 39x26
-            {"x_range": (39, 51), "y_range": (46, 64), "income_dist": [2, 3, 1], "weights": [0.7, 0.2, 0.1]},     # 12x18
-            {"x_range": (39, 51), "y_range": (38, 46), "income_dist": [2, 1, 3], "weights": [0.7, 0.2, 0.1]},     # 12x8
-            {"x_range": (51, 57), "y_range": (38, 42), "income_dist": [2, 3, 1], "weights": [0.7, 0.2, 0.1]},     # 6x4
-            {"x_range": (51, 94), "y_range": (42, 64), "income_dist": [3, 2, 1], "weights": [0.7, 0.3, 0.0]},     # 33x22
-            {"x_range": (94, 120), "y_range": (42, 66), "income_dist": [2, 1, 3], "weights": [0.7, 0.1, 0.2]},     # 36x24
-            {"x_range": (57, 120), "y_range": (0, 42), "income_dist": [3, 2, 1], "weights": [0.7, 0.3, 0.0]},     # 63x42
-            {"x_range": (0, 84), "y_range": (64, 66), "income_dist": [3, 2, 1], "weights": [0.7, 0.3, 0.0]}, 
-            {"x_range": (0, 84), "y_range": (64, 120), "income_dist": [2, 3, 1], "weights": [0.7, 0.2, 0.1]}         #84x56
-        ]
-
-
-        # Precompute area-based weights for neighborhood selection
-        for n in neighborhoods:
-            x_min, x_max = n["x_range"]
-            y_min, y_max = n["y_range"]
-            n["area"] = (x_max - x_min) * (y_max - y_min)
-
-        total_area = sum(n["area"] for n in neighborhoods)
-        area_weights = [n["area"] / total_area for n in neighborhoods]
+            # Define 9 rectangular neighborhoods (can be uneven)
+            neighborhoods = [
+                {"x_range": (0, 84), "y_range": (0, 64), "income_dist": [1, 2, 3], "weights": [0.85, 0.15, 0.0]},     # 57x38
+                {"x_range": (84, 120), "y_range": (66, 120), "income_dist": [1, 2, 3], "weights": [0.6, 0.39, 0.01]},     # 36x54
+                {"x_range": (0, 39), "y_range": (38, 64), "income_dist": [1, 2, 3], "weights": [0.75, 0.25, 0.0]},    # 39x26
+                {"x_range": (39, 51), "y_range": (46, 64), "income_dist": [2, 3, 1], "weights": [0.7, 0.2, 0.1]},     # 12x18
+                {"x_range": (39, 51), "y_range": (38, 46), "income_dist": [2, 1, 3], "weights": [0.7, 0.2, 0.1]},     # 12x8
+                {"x_range": (51, 57), "y_range": (38, 42), "income_dist": [2, 3, 1], "weights": [0.7, 0.2, 0.1]},     # 6x4
+                {"x_range": (51, 94), "y_range": (42, 64), "income_dist": [3, 2, 1], "weights": [0.7, 0.3, 0.0]},     # 33x22
+                {"x_range": (94, 120), "y_range": (42, 66), "income_dist": [2, 1, 3], "weights": [0.7, 0.1, 0.2]},     # 36x24
+                {"x_range": (57, 120), "y_range": (0, 42), "income_dist": [3, 2, 1], "weights": [0.7, 0.3, 0.0]},     # 63x42
+                {"x_range": (0, 84), "y_range": (64, 66), "income_dist": [3, 2, 1], "weights": [0.7, 0.3, 0.0]}, 
+                {"x_range": (0, 84), "y_range": (64, 120), "income_dist": [2, 3, 1], "weights": [0.7, 0.2, 0.1]}         #84x56
+            ]
 
 
-        next_id = 0  # track agent IDs
+            # Precompute area-based weights for neighborhood selection
+            for n in neighborhoods:
+                x_min, x_max = n["x_range"]
+                y_min, y_max = n["y_range"]
+                n["area"] = (x_max - x_min) * (y_max - y_min)
 
-        while next_id < self.num_agents:
-            neighborhood = random.choices(neighborhoods, weights=area_weights, k=1)[0]
-            x_min, x_max = neighborhood["x_range"]
-            y_min, y_max = neighborhood["y_range"]
-
-            x = self.random.randrange(x_min, x_max)
-            y = self.random.randrange(y_min, y_max)
-
-            agent = Household(next_id, self)
-            income = random.choices(neighborhood["income_dist"], weights=neighborhood["weights"])[0]
-            agent.set_income(income)
+            total_area = sum(n["area"] for n in neighborhoods)
+            area_weights = [n["area"] / total_area for n in neighborhoods]
 
 
-            agent.set_environmental_consciousness(random.uniform(0, 1))
-            agent.set_stubborness_factor(random.uniform(0, 1))
+            next_id = 0  # track agent IDs
 
-            if income == 1:
-                agent.set_subsidy(0)  # low income households get subsidy if available
-                education_level = random.choices([1, 2, 3], weights=[0.1, 0.6, 0.3])[0]  # 10% low education, 60% high school, 30% university
-                agent.set_education_level(education_level)
-                self.incomes[1]["count"] += 1
-                    
-                agent_type = random.choices([1, 2], weights=[0.2, 0.8])[0] # 20% chance of house, 80% chance of apartment
+            while next_id < self.num_agents:
+                neighborhood = random.choices(neighborhoods, weights=area_weights, k=1)[0]
+                x_min, x_max = neighborhood["x_range"]
+                y_min, y_max = neighborhood["y_range"]
 
-                if agent_type == 1 and not self.grid.is_cell_empty((x, y)):
-                    max_tries = 100
-                    placed = False
-                    for _ in range(max_tries):
-                        x_try, y_try = self.random.randrange(x_min, x_max), self.random.randrange(y_min, y_max)
-                        if self.grid.is_cell_empty((x_try, y_try)):
-                            x, y = x_try, y_try
-                            placed = True
-                            break
-                    if not placed:
-                        # Fallback to apartment
-                        agent_type = 2
-                        agent.set_type(agent_type)
-                    else:
-                        agent.set_type(agent_type)
+                x = self.random.randrange(x_min, x_max)
+                y = self.random.randrange(y_min, y_max)
 
-                elif agent_type == 2 and not self.grid.is_cell_empty((x, y)):
-                    if self.grid.get_cell_list_contents((x, y))[0].type == 1:
-                        x, y = self.random.randrange(x_min, x_max), self.random.randrange(y_min, y_max)
-                        while (not self.grid.is_cell_empty((x, y)) and 
-                            (self.grid.get_cell_list_contents((x, y))[0].type == 2)):
+                agent = Household(next_id, self)
+                income = random.choices(neighborhood["income_dist"], weights=neighborhood["weights"])[0]
+                agent.set_income(income)
+
+
+                agent.set_environmental_consciousness(random.uniform(0, 1))
+                agent.set_stubborness_factor(random.uniform(0, 1))
+
+                if income == 1:
+                    agent.set_subsidy(0)  # low income households get subsidy if available
+                    education_level = random.choices([1, 2, 3], weights=[0.1, 0.6, 0.3])[0]  # 10% low education, 60% high school, 30% university
+                    agent.set_education_level(education_level)
+                    self.incomes[1]["count"] += 1
+                        
+                    agent_type = random.choices([1, 2], weights=[0.2, 0.8])[0] # 20% chance of house, 80% chance of apartment
+
+                    if agent_type == 1 and not self.grid.is_cell_empty((x, y)):
+                        max_tries = 100
+                        placed = False
+                        for _ in range(max_tries):
+                            x_try, y_try = self.random.randrange(x_min, x_max), self.random.randrange(y_min, y_max)
+                            if self.grid.is_cell_empty((x_try, y_try)):
+                                x, y = x_try, y_try
+                                placed = True
+                                break
+                        if not placed:
+                            # Fallback to apartment
+                            agent_type = 2
+                            agent.set_type(agent_type)
+                        else:
+                            agent.set_type(agent_type)
+
+                    elif agent_type == 2 and not self.grid.is_cell_empty((x, y)):
+                        if self.grid.get_cell_list_contents((x, y))[0].type == 1:
                             x, y = self.random.randrange(x_min, x_max), self.random.randrange(y_min, y_max)
-                        agent.set_type(agent_type)
-                    elif self.grid.get_cell_list_contents((x, y))[0].type == 2:
-                        agent.set_type(agent_type)
-                if agent_type == 1:
-                    self.incomes[1]["houses"] += 1
-                else:
-                    self.incomes[1]["apartments"] += 1
+                            while (not self.grid.is_cell_empty((x, y)) and 
+                                (self.grid.get_cell_list_contents((x, y))[0].type == 2)):
+                                x, y = self.random.randrange(x_min, x_max), self.random.randrange(y_min, y_max)
+                            agent.set_type(agent_type)
+                        elif self.grid.get_cell_list_contents((x, y))[0].type == 2:
+                            agent.set_type(agent_type)
+                    if agent_type == 1:
+                        self.incomes[1]["houses"] += 1
+                    else:
+                        self.incomes[1]["apartments"] += 1
 
+            
+                elif income == 2:
+                    agent.set_subsidy(0) # set subsidy with probability 50%
+                    education_level = random.choices([1, 2, 3], weights=[0.05, 0.2, 0.75])[0]  # 5% low education, 20% high school, 75% university
+                    agent.set_education_level(education_level)
+                    self.incomes[2]["count"] += 1
+
+                    agent_type = random.choices([1, 2], weights=[0.5, 0.5])[0] # 50% chance of house, 50% chance of apartment
+
+                    if agent_type == 1 and not self.grid.is_cell_empty((x, y)):
+                        max_tries = 100
+                        placed = False
+                        for _ in range(max_tries):
+                            x_try, y_try = self.random.randrange(x_min, x_max), self.random.randrange(y_min, y_max)
+                            if self.grid.is_cell_empty((x_try, y_try)):
+                                x, y = x_try, y_try
+                                placed = True
+                                break
+                        if not placed:
+                            # Fallback to apartment
+                            agent_type = 2
+                            agent.set_type(agent_type)
+                        else:
+                            agent.set_type(agent_type)
+                    elif agent_type == 2 and not self.grid.is_cell_empty((x, y)):
+                        if self.grid.get_cell_list_contents((x, y))[0].type == 1:
+                            x, y = self.random.randrange(x_min, x_max), self.random.randrange(y_min, y_max)
+                            while (not self.grid.is_cell_empty((x, y)) and 
+                                self.grid.get_cell_list_contents((x, y))[0].type == 2):
+                                x, y = self.random.randrange(x_min, x_max), self.random.randrange(y_min, y_max)
+                            agent.set_type(agent_type)
+                        elif self.grid.get_cell_list_contents((x, y))[0].type == 2:
+                            agent.set_type(agent_type)
+                    if agent_type == 1:
+                        self.incomes[2]["houses"] += 1
+                    else:
+                        self.incomes[2]["apartments"] += 1
+                
+                else:
+                    agent.set_subsidy(0)
+                    education_level = random.choices([1, 2, 3], weights=[0.01, 0.1, 0.89])[0]
+                    agent.set_education_level(education_level)
+                    self.incomes[3]["count"] += 1
+
+                    agent_type = random.choices([1, 2], weights=[0.8, 0.2])[0] # 80% chance of house, 20% chance of apartment
+                    if agent_type == 1 and not self.grid.is_cell_empty((x, y)):
+                        max_tries = 100
+                        placed = False
+                        for _ in range(max_tries):
+                            x_try, y_try = self.random.randrange(x_min, x_max), self.random.randrange(y_min, y_max)
+                            if self.grid.is_cell_empty((x_try, y_try)):
+                                x, y = x_try, y_try
+                                placed = True
+                                break
+                        if not placed:
+                            # Fallback to apartment
+                            agent_type = 2
+                            agent.set_type(agent_type)
+                        else:
+                            agent.set_type(agent_type)
+
+                    elif agent_type == 2 and not self.grid.is_cell_empty((x, y)):
+                        if self.grid.get_cell_list_contents((x, y))[0].type == 1:
+                            x, y = self.random.randrange(x_min, x_max), self.random.randrange(y_min, y_max)
+                            while (not self.grid.is_cell_empty((x, y)) and 
+                                self.grid.get_cell_list_contents((x, y))[0].type == 2):
+                                x, y = self.random.randrange(x_min, x_max), self.random.randrange(y_min, y_max)
+                            agent.set_type(agent_type)
+                        elif self.grid.get_cell_list_contents((x, y))[0].type == 2:
+                            agent.set_type(agent_type)
+                    if agent_type == 1:
+                        self.incomes[3]["houses"] += 1
+                    else:
+                        self.incomes[3]["apartments"] += 1
+
+                
+                self.grid.place_agent(agent, (x, y))
+                self.schedule.add(agent)
+                next_id += 1
+        if sa:
+            self.datacollector = DataCollector(
+                model_reporters={
+                    "Total Solar Panels": lambda m: sum(a.solar_panels for a in m.schedule.agents)
+                }
+            )
+            for i in range(self.num_agents):
+                agent = Household(i, self)
+
+                # Set parameters globally if provided (overriding randomness)
+                agent.set_income(round(income) if income is not None else random.choice([1, 2, 3]))
+                agent.set_environmental_consciousness(env_consciousness if env_consciousness is not None else random.uniform(0, 1))
+                agent.set_stubborness_factor(stubbornness if stubbornness is not None else random.uniform(0, 1))
+                agent.set_education_level(round(education) if education is not None else random.choice([1, 2, 3]))
+                agent.set_type(round(household_type) if household_type is not None else random.choice([1, 2]))
+                agent.set_subsidy(round(subsidy_eligibility) if subsidy_eligibility is not None else 0)
+
+                # Place agent on grid
+                x = self.random.randrange(self.grid.width)
+                y = self.random.randrange(self.grid.height)
+                while not self.grid.is_cell_empty((x, y)):
+                    x = self.random.randrange(self.grid.width)
+                    y = self.random.randrange(self.grid.height)
+                self.grid.place_agent(agent, (x, y))
+
+                self.schedule.add(agent)
+
+        self.datacollector.collect(self)
         
-            elif income == 2:
-                agent.set_subsidy(0) # set subsidy with probability 50%
-                education_level = random.choices([1, 2, 3], weights=[0.05, 0.2, 0.75])[0]  # 5% low education, 20% high school, 75% university
-                agent.set_education_level(education_level)
-                self.incomes[2]["count"] += 1
-
-                agent_type = random.choices([1, 2], weights=[0.5, 0.5])[0] # 50% chance of house, 50% chance of apartment
-
-                if agent_type == 1 and not self.grid.is_cell_empty((x, y)):
-                    max_tries = 100
-                    placed = False
-                    for _ in range(max_tries):
-                        x_try, y_try = self.random.randrange(x_min, x_max), self.random.randrange(y_min, y_max)
-                        if self.grid.is_cell_empty((x_try, y_try)):
-                            x, y = x_try, y_try
-                            placed = True
-                            break
-                    if not placed:
-                        # Fallback to apartment
-                        agent_type = 2
-                        agent.set_type(agent_type)
-                    else:
-                        agent.set_type(agent_type)
-                elif agent_type == 2 and not self.grid.is_cell_empty((x, y)):
-                    if self.grid.get_cell_list_contents((x, y))[0].type == 1:
-                        x, y = self.random.randrange(x_min, x_max), self.random.randrange(y_min, y_max)
-                        while (not self.grid.is_cell_empty((x, y)) and 
-                            self.grid.get_cell_list_contents((x, y))[0].type == 2):
-                            x, y = self.random.randrange(x_min, x_max), self.random.randrange(y_min, y_max)
-                        agent.set_type(agent_type)
-                    elif self.grid.get_cell_list_contents((x, y))[0].type == 2:
-                        agent.set_type(agent_type)
-                if agent_type == 1:
-                    self.incomes[2]["houses"] += 1
-                else:
-                    self.incomes[2]["apartments"] += 1
-            
-            else:
-                agent.set_subsidy(0)
-                education_level = random.choices([1, 2, 3], weights=[0.01, 0.1, 0.89])[0]
-                agent.set_education_level(education_level)
-                self.incomes[3]["count"] += 1
-
-                agent_type = random.choices([1, 2], weights=[0.8, 0.2])[0] # 80% chance of house, 20% chance of apartment
-                if agent_type == 1 and not self.grid.is_cell_empty((x, y)):
-                    max_tries = 100
-                    placed = False
-                    for _ in range(max_tries):
-                        x_try, y_try = self.random.randrange(x_min, x_max), self.random.randrange(y_min, y_max)
-                        if self.grid.is_cell_empty((x_try, y_try)):
-                            x, y = x_try, y_try
-                            placed = True
-                            break
-                    if not placed:
-                        # Fallback to apartment
-                        agent_type = 2
-                        agent.set_type(agent_type)
-                    else:
-                        agent.set_type(agent_type)
-
-                elif agent_type == 2 and not self.grid.is_cell_empty((x, y)):
-                    if self.grid.get_cell_list_contents((x, y))[0].type == 1:
-                        x, y = self.random.randrange(x_min, x_max), self.random.randrange(y_min, y_max)
-                        while (not self.grid.is_cell_empty((x, y)) and 
-                            self.grid.get_cell_list_contents((x, y))[0].type == 2):
-                            x, y = self.random.randrange(x_min, x_max), self.random.randrange(y_min, y_max)
-                        agent.set_type(agent_type)
-                    elif self.grid.get_cell_list_contents((x, y))[0].type == 2:
-                        agent.set_type(agent_type)
-                if agent_type == 1:
-                    self.incomes[3]["houses"] += 1
-                else:
-                    self.incomes[3]["apartments"] += 1
-
-            
-            self.grid.place_agent(agent, (x, y))
-            self.schedule.add(agent)
-            next_id += 1
     
 
     def step(self):
+        print("running step")
         """Advance the model by one step."""
-        if self.schedule.time == 0:
-            self.datacollector.collect(self)
+        #if self.schedule.time == 0:
+        #   self.datacollector.collect(self)
         if self.schedule.time == self.subsidy_timestep and self.subsidy == 1:
             for agent in self.schedule.agents:
                 if agent.income == 1:
@@ -226,6 +256,7 @@ class CityModel(Model):
         """Run the model for a specified number of steps."""
         for i in range(steps):
             self.step()
+            print(f"Step {i + 1}/{steps} completed.")
             if not self.running:
                 break
 
