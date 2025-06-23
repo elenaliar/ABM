@@ -12,6 +12,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from itertools import combinations
 import random
+#plot second order
+import seaborn as sns
 # Set random seed for reproducibility
 random.seed(42)
 
@@ -127,18 +129,17 @@ plt.tight_layout()
 plt.savefig("sobol_first_order_indices.png")
 plt.show()
 
-#plot second order
-plt.figure(figsize=(12, 8))
-for i, label in enumerate(output_labels):
-    Si = sobol_results[label]
-    plt.bar(np.arange(len(Si['S2'])), Si['S2'], label=label)
-plt.xticks(np.arange(len(problem['names'])), problem['names'], rotation=45)
-plt.ylabel('Sobol Second-Order Indices')
-plt.title('Sobol Second-Order Sensitivity Indices')
-plt.legend()
-plt.tight_layout()
-plt.savefig("sobol_second_order_indices.png")
 
+
+for label in output_labels:
+    Si = sobol_results[label]
+    S2 = Si['S2']
+    plt.figure(figsize=(10, 8))
+    sns.heatmap(S2, xticklabels=problem['names'], yticklabels=problem['names'], annot=True, cmap='viridis')
+    plt.title(f'Second-Order Sobol Indices - {label}')
+    plt.tight_layout()
+    plt.savefig(f'sobol_second_order_{label}.png')
+    plt.close()
 
 # Plotting Total Sobol indices
 plt.figure(figsize=(12, 8))
