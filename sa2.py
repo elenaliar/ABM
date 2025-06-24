@@ -32,7 +32,7 @@ problem = {
 # ---- Sampling ----
 distinct_samples = 8
 replicates = 2
-steps = 1
+steps = 10
 param_values = saltelli.sample(problem, distinct_samples, calc_second_order=True)
 
 # ---- Fixed Parameters ----
@@ -42,7 +42,7 @@ fixed_params = {
     "num_agents": 10,
     "subsidy": 1,
     "subsidy_timestep": 0,
-    "max_steps": 100,
+    "max_steps": 10,
     "sa": True  # Enable sensitivity analysis
 }
 
