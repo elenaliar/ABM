@@ -9,13 +9,13 @@ def agent_portrayal(agent):
     if agent is None:
         return
 
-    portrayal = {"Shape": "circle", "Filled": "true", "r": 0.5}
+    portrayal = {"Shape": "circle", "Filled": "true", "r": 2}
     
     # Color by income level
     if agent.income == 1:
-        color = "red"       # Low income
+        color = "red"      # Low income
     elif agent.income == 2:
-        color = "orange"    # Mid income
+        color = "orange"   # Mid income
     else:
         color = "green"     # High income
 
@@ -44,7 +44,7 @@ model_params = {
     "num_agents": 10000,  # adjust as needed
     "subsidy": 1,  # 0 = no subsidy, 1 = subsidy available
     "subsidy_timestep": 0,  # when the subsidy is applied
-    "max_steps": 200,  # number of steps to run the model
+    "max_steps": 500,  # number of steps to run the model
 }
 
 # Create the ModularServer

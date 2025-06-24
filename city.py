@@ -10,7 +10,7 @@ import numpy as np
 
 class CityModel(Model):
     def __init__(self, width=120, height=120, num_agents=10000, subsidy=1, subsidy_timestep=0, max_steps=200, beta1 = 0.35,
-        beta2 = 0.05, beta3 = 0.5, beta4 = 0.2, beta5 = 0.3, beta6 = 0.4, beta7 = 0.6):
+        beta2 = 0.05, beta3 = 0.5, beta4 = 0.2, beta5 = 0.3, beta6 = 0.3, beta7 = 0.6):
 
         self.num_agents = num_agents
         self.grid = Grid(width, height)
