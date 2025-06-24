@@ -11,12 +11,12 @@ random.seed(42)  # For reproducibility
 width = 120
 height = 120
 num_agents = 10000
-subsidy = 1
+subsidy = 0
 num_steps = 200  # Run for 100 steps
-subsidy_timestep = 50  # Apply subsidy at step 50
+subsidy_timestep = 0  # Apply subsidy at step 50
 
 # Initialize the model
-model = CityModel(width, height, num_agents, subsidy, subsidy_timestep)
+model = CityModel(width=width, height=height, num_agents=num_agents, subsidy=subsidy, subsidy_timestep=subsidy_timestep, max_steps=num_steps)
 
 # Run the model
 for step in range(num_steps):
@@ -62,7 +62,6 @@ plt.xlabel("Step")
 plt.ylabel("Proportion of Households with Solar Panels")
 plt.show()
 
-# Histogram of solar panel adoption by income level and dwelling type (6 bars: House + Apartment for each income level)
 # Histogram of solar panel adoption by income level and dwelling type (6 bars: House + Apartment for each income level)
 
 # Get the final timestep data
