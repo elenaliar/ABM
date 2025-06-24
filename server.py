@@ -42,7 +42,9 @@ model_params = {
     "width": grid_width,
     "height": grid_height,
     "num_agents": 10000,  # adjust as needed
-    "subsidy": 0  # 0 = no subsidy, 1 = subsidy available
+    "subsidy": 1,  # 0 = no subsidy, 1 = subsidy available
+    "subsidy_timestep": 0,  # when the subsidy is applied
+    "max_steps": 200,  # number of steps to run the model
 }
 
 # Create the ModularServer

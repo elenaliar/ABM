@@ -70,8 +70,8 @@ class Household(Agent):
         utility = self.utility(grid, citymodel, beta1, beta2, beta3, beta4, beta5, beta6, beta7)
         # Input utility into a standard normal distribution to get probability of installation
         prob_installation = norm.cdf(utility)
-
-        if 0.95 < prob_installation:
+        #print(f"Household {self.unique_id} utility: {utility}, probability of installation: {prob_installation}")
+        if 0.98 < prob_installation:
             self.solar_panels = 1
 
 
