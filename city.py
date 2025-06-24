@@ -10,7 +10,7 @@ import numpy as np
 
 class CityModel(Model):
     def __init__(self, width=120, height=120, num_agents=10000, subsidy=1, subsidy_timestep=0, 
-             income=None, env_consciousness=None, stubbornness=None, education=None, sa=True, household_type=None, subsidy_eligibility=None):
+             income=None, env_consciousness=None, stubbornness=None, education=None, sa=True, household_type=None, subsidy_eligibility=None, max_steps=100):
 
         self.num_agents = num_agents
         self.grid = Grid(width, height)
@@ -18,6 +18,7 @@ class CityModel(Model):
         self.subsidy = subsidy  # Subsidy flag, 0 if government does not provide subsidy, 1 if it does
         self.running = True
         self.subsidy_timestep = subsidy_timestep # Timestep when subsidy is applied
+        self.max_steps = max_steps
 
         # Number of household per income level and apartment type
         self.incomes = {
@@ -231,8 +232,11 @@ class CityModel(Model):
     
 
     def step(self):
-        print("running step")
+        #print("running step")
         """Advance the model by one step."""
+        if self.schedule.time >= self.max_steps:
+            self.running = False
+            print("Model has reached max steps, stopping.") 
         #if self.schedule.time == 0:
         #   self.datacollector.collect(self)
         if self.schedule.time == self.subsidy_timestep and self.subsidy == 1:
@@ -251,6 +255,7 @@ class CityModel(Model):
                 agents[key].step(self.grid, self)
         self.datacollector.collect(self)
         self.schedule.time += 1
+        
     
     def run_model(self, steps=100):
         """Run the model for a specified number of steps."""

@@ -42,6 +42,7 @@ fixed_params = {
     "num_agents": 100,
     "subsidy": 1,
     "subsidy_timestep": 0,
+    "max_steps": 100,
     "sa": True  # Enable sensitivity analysis
 }
 
@@ -51,7 +52,8 @@ batch = BatchRunner(
     fixed_parameters=fixed_params,
     variable_parameters={name: [] for name in problem['names']},
     max_steps=steps,
-    model_reporters={"SolarAdoption": lambda m: sum([a.solar_panels for a in m.schedule.agents])}
+    model_reporters={"SolarAdoption": lambda m: sum([a.solar_panels for a in m.schedule.agents])},
+    display_progress=True,
 )
 
 # ---- Run Experiments ----
