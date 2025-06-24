@@ -11,7 +11,7 @@ random.seed(42)  # For reproducibility
 width = 120
 height = 120
 num_agents = 10000
-subsidy = 0
+subsidy = 1
 num_steps = 200  # Run for 100 steps
 subsidy_timestep = 0  # Apply subsidy at step 50
 

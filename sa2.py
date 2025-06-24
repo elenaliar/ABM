@@ -7,6 +7,7 @@ from city import CityModel
 from IPython.display import clear_output
 import matplotlib.pyplot as plt
 from itertools import combinations
+import seaborn as sns
 
 # ---- Sobol Problem Setup ----
 problem = {
@@ -32,9 +33,9 @@ problem = {
 }
 
 # ---- Sampling ----
-distinct_samples = 128
+distinct_samples = 64
 replicates = 5
-steps = 100
+steps = 300
 param_values = saltelli.sample(problem, distinct_samples, calc_second_order=True)
 
 # ---- Fixed Parameters ----
@@ -44,7 +45,7 @@ fixed_params = {
     "num_agents": 10000,
     "subsidy": 1,
     "subsidy_timestep": 0,
-    "max_steps": 100,
+    "max_steps": 300,
 }
 
 # ---- BatchRunner Setup ----
@@ -146,8 +147,29 @@ def plot_index(Si, params, order, title=''):
     plt.grid(True, axis='x', linestyle='--', alpha=0.5)
     plt.tight_layout()
     plt.show()
+import seaborn as sns
+
+def plot_second_order_heatmap(Si, params, title='Second-order Sobol Indices'):
+    p = len(params)
+    S2 = np.array(Si['S2']).reshape((p, p))
+    mask = np.tril(np.ones_like(S2, dtype=bool))  # mask lower triangle
+
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(S2, 
+                xticklabels=params, 
+                yticklabels=params, 
+                cmap='coolwarm', 
+                mask=mask, 
+                annot=True, 
+                fmt=".2f", 
+                cbar_kws={'label': 'Second-order Sobol Index'})
+    plt.title(title)
+    plt.tight_layout()
+    plt.show()
 
 plot_index(Si, problem['names'], '1', 'First-order Sensitivity')
 plot_index(Si, problem['names'], '2', 'Second-order Sensitivity')
 plot_index(Si, problem['names'], 'T', 'Total-order Sensitivity')
+
+plot_second_order_heatmap(Si, problem['names'])
 
