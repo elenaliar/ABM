@@ -11,8 +11,13 @@ random.seed(42)  # For reproducibility
 width = 120
 height = 120
 num_agents = 10000
+<<<<<<< HEAD
 subsidy = 0
 num_steps = 1000  # Run for 100 steps
+=======
+subsidy = 1
+num_steps = 200  # Run for 100 steps
+>>>>>>> c0e3b3553aec6a901b4a97ca4f1a8a1fc62bd531
 subsidy_timestep = 0  # Apply subsidy at step 50
 
 # Initialize the model
