@@ -3,8 +3,6 @@ from mesa import Agent
 import numpy as np
 from scipy.stats import norm
 
-
-
 class Household(Agent):
     """A household agent with unique id and position in the grid"""
     
@@ -51,8 +49,7 @@ class Household(Agent):
         return grid.get_neighbors(self.pos, include_center)
     
     def utility(self, grid, citymodel, beta1, beta2, beta3, beta4, beta5, beta6, beta7):
-        """Calculate the utility of the household based on income, environmental consciousness, and stubbornness factor"""
-        # Utility function can be defined here
+        """Calculate the utility of the household based on all of its attributes"""
         neighbours = self.get_neighbours(grid)
         solar_neighbors = [n for n in neighbours if n.solar_panels == 1]
         fraction_with_solar = len(solar_neighbors) / len(neighbours) if neighbours else 0
@@ -64,13 +61,11 @@ class Household(Agent):
     
     def step(self, grid, citymodel, beta1, beta2, beta3, beta4, beta5, beta6, beta7):
         """Define the step function for the household agent"""
-        # get neighbors with solar panels
         if self.solar_panels == 1:
             return
+        # Probit model for solar panel installation
         utility = self.utility(grid, citymodel, beta1, beta2, beta3, beta4, beta5, beta6, beta7)
-        # Input utility into a standard normal distribution to get probability of installation
         prob_installation = norm.cdf(utility)
-        #print(f"Household {self.unique_id} utility: {utility}, probability of installation: {prob_installation}")
         if 0.98 < prob_installation:
             self.solar_panels = 1
 

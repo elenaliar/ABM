@@ -2,9 +2,8 @@ from mesa.visualization.modules import CanvasGrid
 from mesa.visualization.ModularVisualization import ModularServer
 from mesa.visualization.modules import ChartModule
 from city import CityModel
-from household import Household
 
-# Portrayal function to visualize household agents
+# Portrayal function to visualize household agents 
 def agent_portrayal(agent):
     if agent is None:
         return
@@ -19,7 +18,7 @@ def agent_portrayal(agent):
     else:
         color = "green"     # High income
 
-    # Darker color if solar panels are installed
+    # Blue for when solar panels are installed
     if agent.solar_panels == 1:
         color = "blue"
 
@@ -32,7 +31,7 @@ grid_width = 120
 grid_height = 120
 canvas_element = CanvasGrid(agent_portrayal, grid_width, grid_height, 600, 600)
 
-# Optional: Chart to show proportion of solar panel adoption over time
+# Chart to show proportion of solar panel adoption over time
 chart = ChartModule([
     {"Label": "Solar Adoption", "Color": "blue"}
 ])
@@ -41,7 +40,7 @@ chart = ChartModule([
 model_params = {
     "width": grid_width,
     "height": grid_height,
-    "num_agents": 10000,  # adjust as needed
+    "num_agents": 10000, 
     "subsidy": 1,  # 0 = no subsidy, 1 = subsidy available
     "subsidy_timestep": 0,  # when the subsidy is applied
     "max_steps": 500,  # number of steps to run the model

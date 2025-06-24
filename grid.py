@@ -1,5 +1,5 @@
-#create the grid for our abm project, using mesa and multigrid
 from mesa.space import MultiGrid
+
 class Grid(MultiGrid):
     """A grid for the agent-based model, extending Mesa's MultiGrid."""
     
@@ -8,8 +8,6 @@ class Grid(MultiGrid):
         super().__init__(width, height, torus=False)
         self.width = width
         self.height = height
-
-
 
     def get_neighbors(self, pos, include_center=False):
         """Get neighbors of a given position moore neighborhood."""

@@ -1,155 +1,119 @@
 from mesa.batchrunner import BatchRunner
-import SALib
-
 from SALib.sample import saltelli
-from grid import Grid
-from city import CityModel
-# Import necessary libraries for sensitivity analysis
-from mesa.batchrunner import FixedBatchRunner
 from SALib.analyze import sobol
 import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-from itertools import combinations
-import random
-#plot second order
-import seaborn as sns
-# Set random seed for reproducibility
-random.seed(42)
+from city import CityModel
+from IPython.display import clear_output
+from visualize_funcs import plot_index, plot_second_order_heatmap
 
-# Define problem for SALib
+
+# Define the Sobol problem with 7 parameters, each ranging from 0 to 1
 problem = {
-    'num_vars': 6,
+    'num_vars': 7,
     'names': [
-        'income',                     # Average income group: 1 (low), 2 (mid), 3 (high)
-        'environmental_consciousness',# Mean environmental consciousness
-        'stubbornness_factor',        # Mean stubbornness
-        'education_level',            # Average education level: 1 (low), 2 (mid), 3 (high)
-        'subsidy',                    # Model-wide subsidy
-        'type'                        # Housing type: 1 (house), 2 (apartment)
+        'beta1',                  # 0–1
+        'beta2',                  # 0–1
+        'beta3',                  # 0–1
+        'beta4',                  # 0–1
+        'beta5',                  # 0–1
+        'beta6',                  # 0–1
+        'beta7',                  # 0–1
     ],
     'bounds': [
-        [1, 3],      # income group
-        [0, 1],      # environmental_consciousness
-        [0, 1],      # stubbornness
-        [1, 3],      # education level
-        [0, 1],      # subsidy
-        [1, 2]       # housing type
+        [0, 1],      # beta1
+        [0, 1],      # beta2
+        [0, 1],      # beta3
+        [0, 1],      # beta4
+        [0, 1],      # beta5
+        [0, 1],      # beta6
+        [0, 1]       # beta7
     ]
 }
 
-replicates = 16
-max_steps = 150
-distinct_samples = 64 # or 128
 
-# Generate Sobol samples
+distinct_samples = 64
+replicates = 5
+steps = 300
+
+# Generate parameter samples using Saltelli's method for Sobol analysis
 param_values = saltelli.sample(problem, distinct_samples, calc_second_order=True)
 
-# Run model function
-def run_model(params, run_id=0):
-    random.seed(run_id)  # Ensure reproducibility for each run
-    np.random.seed(run_id)
-    income_raw, env_mean, stub_mean, edu_raw, subsidy_raw, type_raw = params
+# Fixed parameters for the CityModel simulation
+fixed_params = {
+    "width": 120,
+    "height": 120,
+    "num_agents": 10000,
+    "subsidy": 1,
+    "subsidy_timestep": 0,
+    "max_steps": 300,
+}
 
-    # Convert categorical values to integers
-    income = int(round(income_raw))
-    edu_level = int(round(edu_raw))
-    housing_type = int(round(type_raw))
-    subsidy = int(round(subsidy_raw))
+# Define model reporters to track various solar panel counts by income and housing type
+reporters = {
+    "Low Income Solar House": lambda m: sum(1 for a in m.schedule.agents if a.income == 1 and a.solar_panels and a.type == 1),
+    "Low Income Solar Apartment": lambda m: sum(1 for a in m.schedule.agents if a.income == 1 and a.solar_panels and a.type == 2),
+    "Mid Income Solar House": lambda m: sum(1 for a in m.schedule.agents if a.income == 2 and a.solar_panels and a.type == 1),
+    "Mid Income Solar Apartment": lambda m: sum(1 for a in m.schedule.agents if a.income == 2 and a.solar_panels and a.type == 2),
+    "High Income Solar House": lambda m: sum(1 for a in m.schedule.agents if a.income == 3 and a.solar_panels and a.type == 1),
+    "High Income Solar Apartment": lambda m: sum(1 for a in m.schedule.agents if a.income == 3 and a.solar_panels and a.type == 2),
+    "Total Solar Panels": lambda m: sum(a.solar_panels for a in m.schedule.agents),
+}
 
-    N = 10000
-    model = CityModel(num_agents=N, width=120, height=120, subsidy=subsidy, seed=run_id)
+# Initialize the batch runner with fixed and variable parameters and reporters
+batch = BatchRunner(
+    CityModel,
+    fixed_parameters=fixed_params,
+    variable_parameters={name: [] for name in problem['names']},
+    max_steps=steps,
+    model_reporters=reporters,
+    display_progress=True,
+)
 
-    agents = model.schedule.agents
-    random.shuffle(agents)
-    print("about to modify agents")
-    for i, agent in enumerate(agents):
-        # Set categorical variables
-        agent.income = income
-        agent.education_level = edu_level   
-        agent.type = housing_type
+results = []
+count = 0
+total = len(param_values) * replicates
 
-        # Set continuous attributes
-        agent.environmental_consciousness = np.clip(np.random.normal(env_mean, 0.1), 0, 1)
-        agent.stubborness_factor = np.clip(np.random.normal(stub_mean, 0.1), 0, 1)
+# Run the simulation for each replicate and parameter set
+for i in range(replicates):
+    print(f"Running replicate {i + 1}/{replicates}...")
+    for params in param_values:
+        print(f"Parameters: {params}")
+        p = list(params)
 
-        # Initial adoption
-        agent.solar_panels = 0
-    for _ in range(max_steps):
-        model.step()
-    df = model.datacollector.get_model_vars_dataframe().iloc[-1]
-    return df.tolist()
+        variable_dict = dict(zip(problem['names'], p))
 
-# Run all samples with replicates
-Y = []
-for i, p in enumerate(param_values):
-    for r in range(replicates):
-        print(f"Running sample {i + 1}/{len(param_values)} with parameters: {p}")
-        run_id = i * replicates + r  # Unique run ID for each replicate
-        result = run_model(p, run_id=run_id)
-        Y.append(result)
+        batch.run_iteration(variable_dict, tuple(p), count)
 
-Y = np.array(Y)
+        result = batch.get_model_vars_dataframe().iloc[count]
+        results.append({
+            **variable_dict,
+            "Low Income Solar House": result["Low Income Solar House"],
+            "Low Income Solar Apartment": result["Low Income Solar Apartment"],
+            "Mid Income Solar House": result["Mid Income Solar House"],
+            "Mid Income Solar Apartment": result["Mid Income Solar Apartment"],
+            "High Income Solar House": result["High Income Solar House"],
+            "High Income Solar Apartment": result["High Income Solar Apartment"],
+            "Total Solar Panels": result["Total Solar Panels"]
+        })
 
-output_labels = [
-    "Low Income Solar House",
-    "Low Income Solar Apartment",
-    "Mid Income Solar House",
-    "Mid Income Solar Apartment",
-    "High Income Solar House",
-    "High Income Solar Apartment"
-]
+        count += 1
+        clear_output(wait=True)
+        print(f"{(count / total) * 100:.2f}% complete")
 
-# Run Sobol analysis per output variable
-sobol_results = {}
-for i, label in enumerate(output_labels):
-    Si = sobol.analyze(problem, Y[:, i], calc_second_order=True)
-    sobol_results[label] = Si
+# Convert results to a DataFrame and save as CSV
+df = pd.DataFrame(results)
+df.to_csv("sobol_sensitivity_results.csv", index=False)
 
-# Optional: show first-order sensitivity for each output
-for label in output_labels:
-    print(f"\nSobol Indices for {label}:")
-    print("S1:", sobol_results[label]['S1'])
-    print("S2:", sobol_results[label]['S2'])
-    print("ST:", sobol_results[label]['ST'])
+# Perform Sobol sensitivity analysis on total solar panels output
+Si = sobol.analyze(problem, df["Total Solar Panels"].values, calc_second_order=True)
+print("First-order indices:", Si['S1'])
+print("Second-order indices:", Si['S2'])
+print("Total-order indices:", Si['ST'])
 
-# Save results to CSV
-results_df = pd.DataFrame(Y, columns=output_labels)
-results_df.to_csv("sensitivity_analysis_results.csv", index=False)
-# Plotting Sobol indices
-plt.figure(figsize=(12, 8)) 
-for i, label in enumerate(output_labels):
-    Si = sobol_results[label]
-    plt.bar(np.arange(len(Si['S1'])), Si['S1'], label=label)
-plt.xticks(np.arange(len(problem['names'])), problem['names'], rotation=45)
-plt.ylabel('Sobol First-Order Indices')
-plt.title('Sobol First-Order Sensitivity Indices')
-plt.legend()
-plt.tight_layout()
-plt.savefig("sobol_first_order_indices.png")
-plt.show()
+# Plot the sensitivity indices
+plot_index(Si, problem['names'], '1', 'First-order Sensitivity')
+plot_index(Si, problem['names'], '2', 'Second-order Sensitivity')
+plot_index(Si, problem['names'], 'T', 'Total-order Sensitivity')
 
+plot_second_order_heatmap(Si, problem['names'])
 
-
-for label in output_labels:
-    Si = sobol_results[label]
-    S2 = Si['S2']
-    plt.figure(figsize=(10, 8))
-    sns.heatmap(S2, xticklabels=problem['names'], yticklabels=problem['names'], annot=True, cmap='viridis')
-    plt.title(f'Second-Order Sobol Indices - {label}')
-    plt.tight_layout()
-    plt.savefig(f'sobol_second_order_{label}.png')
-    plt.close()
-
-# Plotting Total Sobol indices
-plt.figure(figsize=(12, 8))
-for i, label in enumerate(output_labels):
-    Si = sobol_results[label]
-    plt.bar(np.arange(len(Si['ST'])), Si['ST'], label=label)        
-plt.xticks(np.arange(len(problem['names'])), problem['names'], rotation=45)
-plt.ylabel('Sobol Total Indices')
-plt.title('Sobol Total Sensitivity Indices')
-plt.legend()
-plt.tight_layout()
-plt.savefig("sobol_total_indices.png")
-plt.show()
