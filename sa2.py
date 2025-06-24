@@ -32,14 +32,14 @@ problem = {
 # ---- Sampling ----
 distinct_samples = 8
 replicates = 2
-steps = 10
+steps = 1
 param_values = saltelli.sample(problem, distinct_samples, calc_second_order=True)
 
 # ---- Fixed Parameters ----
 fixed_params = {
     "width": 120,
     "height": 120,
-    "num_agents": 100,
+    "num_agents": 10,
     "subsidy": 1,
     "subsidy_timestep": 0,
     "sa": True  # Enable sensitivity analysis
@@ -72,9 +72,7 @@ for i in range(replicates):
         p[5] = int(round(p[5]))  # subsidy_eligibility
 
         variable_dict = dict(zip(problem['names'], p))
-
         batch.run_iteration(variable_dict, tuple(p), count)
-
         result = batch.get_model_vars_dataframe().iloc[count]
         results.append({**variable_dict, "SolarAdoption": result["SolarAdoption"]})
         count += 1
