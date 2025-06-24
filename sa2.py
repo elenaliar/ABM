@@ -10,40 +10,41 @@ from itertools import combinations
 
 # ---- Sobol Problem Setup ----
 problem = {
-    'num_vars': 6,
+    'num_vars': 7,
     'names': [
-        'income',                # 1–3 categorical
-        'env_consciousness',     # 0–1
-        'stubbornness',          # 0–1
-        'education',             # 1–3 categorical
-        'household_type',                  # 1–2 categorical
-        'subsidy_eligibility'    # 0–1 binary
+        'beta1',                  # 0–1
+        'beta2',                  # 0–1
+        'beta3',                  # 0–1
+        'beta4',                  # 0–1
+        'beta5',                  # 0–1
+        'beta6',                  # 0–1
+        'beta7',                  # 0–1
     ],
     'bounds': [
-        [1, 3],      # income
-        [0, 1],      # environmental consciousness
-        [0, 1],      # stubbornness
-        [1, 3],      # education
-        [1, 2],      # household type
-        [0, 1]       # subsidy eligibility
+        [0, 1],      # beta1
+        [0, 1],      # beta2
+        [0, 1],      # beta3
+        [0, 1],      # beta4
+        [0, 1],      # beta5
+        [0, 1],      # beta6
+        [0, 1]       # beta7
     ]
 }
 
 # ---- Sampling ----
-distinct_samples = 8
-replicates = 2
-steps = 10
+distinct_samples = 128
+replicates = 5
+steps = 100
 param_values = saltelli.sample(problem, distinct_samples, calc_second_order=True)
 
 # ---- Fixed Parameters ----
 fixed_params = {
     "width": 120,
     "height": 120,
-    "num_agents": 100,
+    "num_agents": 10000,
     "subsidy": 1,
     "subsidy_timestep": 0,
     "max_steps": 100,
-    "sa": True  # Enable sensitivity analysis
 }
 
 # ---- BatchRunner Setup ----
@@ -52,7 +53,15 @@ batch = BatchRunner(
     fixed_parameters=fixed_params,
     variable_parameters={name: [] for name in problem['names']},
     max_steps=steps,
-    model_reporters={"SolarAdoption": lambda m: sum([a.solar_panels for a in m.schedule.agents])},
+    model_reporters={
+                "Low Income Solar House": lambda m: sum(1 for a in m.schedule.agents if a.income == 1 and a.solar_panels == 1 and a.type == 1),
+                "Low Income Solar Apartment": lambda m: sum(1 for a in m.schedule.agents if a.income == 1 and a.solar_panels == 1 and a.type == 2),
+                "Mid Income Solar House": lambda m: sum(1 for a in m.schedule.agents if a.income == 2 and a.solar_panels == 1 and a.type == 1),
+                "Mid Income Solar Apartment": lambda m: sum(1 for a in m.schedule.agents if a.income == 2 and a.solar_panels == 1 and a.type == 2),
+                "High Income Solar House": lambda m: sum(1 for a in m.schedule.agents if a.income == 3 and a.solar_panels == 1 and a.type == 1),
+                "High Income Solar Apartment": lambda m: sum(1 for a in m.schedule.agents if a.income == 3 and a.solar_panels == 1 and a.type == 2),
+                "Total Solar Panels": lambda m: sum(a.solar_panels for a in m.schedule.agents),
+                },
     display_progress=True,
 )
 
@@ -67,20 +76,23 @@ for i in range(replicates):
         print(f"Parameters: {params}")
         p = list(params)
 
-        # Round categorical/binary variables
-        p[0] = int(round(p[0]))  # income
-        p[3] = int(round(p[3]))  # education
-        p[4] = int(round(p[4]))  # type
-        p[5] = int(round(p[5]))  # subsidy_eligibility
-
         variable_dict = dict(zip(problem['names'], p))
 
         batch.run_iteration(variable_dict, tuple(p), count)
 
         result = batch.get_model_vars_dataframe().iloc[count]
-        results.append({**variable_dict, "SolarAdoption": result["SolarAdoption"]})
-        count += 1
+        results.append({
+            **variable_dict,
+            "Low Income Solar House": result["Low Income Solar House"],
+            "Low Income Solar Apartment": result["Low Income Solar Apartment"],
+            "Mid Income Solar House": result["Mid Income Solar House"],
+            "Mid Income Solar Apartment": result["Mid Income Solar Apartment"],
+            "High Income Solar House": result["High Income Solar House"],
+            "High Income Solar Apartment": result["High Income Solar Apartment"],
+            "Total Solar Panels": result["Total Solar Panels"]
+        })
 
+        count += 1
         clear_output(wait=True)
         print(f"{(count / total) * 100:.2f}% complete")
 
@@ -89,55 +101,53 @@ df = pd.DataFrame(results)
 df.to_csv("sobol_sensitivity_results.csv", index=False)
 
 # ---- Sobol Analysis (Optional) ----
-Si = sobol.analyze(problem, df["SolarAdoption"].values, calc_second_order=True)
+Si = sobol.analyze(problem, df["Total Solar Panels"].values, calc_second_order=True)
 print("First-order indices:", Si['S1'])
 print("Second-order indices:", Si['S2'])
 print("Total-order indices:", Si['ST'])
 
 
-
-def plot_index(s, params, i, title=''):
+def plot_index(Si, params, order, title=''):
     """
-    Creates a plot for Sobol sensitivity analysis that shows the contributions
-    of each parameter to the global sensitivity.
+    Plot Sobol sensitivity indices.
 
     Args:
-        s (dict): dictionary {'S#': dict, 'S#_conf': dict} of dicts that hold
-            the values for a set of parameters
-        params (list): the parameters taken from s
-        i (str): string that indicates what order the sensitivity is.
-        title (str): title for the plot
+        Si (dict): Output from sobol.analyze (contains 'S1', 'S1_conf', 'S2', etc.).
+        params (list): Parameter names.
+        order (str): '1' for first-order, '2' for second-order, 'T' for total-order.
+        title (str): Plot title.
     """
-
-    if i == '2':
+    plt.figure(figsize=(10, 6))
+    
+    if order == '2':
+        # Second-order indices
         p = len(params)
-        params = list(combinations(params, 2))
-        indices = s['S' + i].reshape((p ** 2))
-        indices = indices[~np.isnan(indices)]
-        errors = s['S' + i + '_conf'].reshape((p ** 2))
-        errors = errors[~np.isnan(errors)]
+        index_pairs = list(combinations(params, 2))
+        indices = Si['S2'].reshape(p, p)[np.triu_indices(p, k=1)]
+        errors = Si['S2_conf'].reshape(p, p)[np.triu_indices(p, k=1)]
+        labels = [f"{a}, {b}" for a, b in index_pairs]
+    elif order == '1':
+        indices = Si['S1']
+        errors = Si['S1_conf']
+        labels = params
+    elif order.upper() == 'T':
+        indices = Si['ST']
+        errors = Si['ST_conf']
+        labels = params
     else:
-        indices = s['S' + i]
-        errors = s['S' + i + '_conf']
-        plt.figure()
+        raise ValueError("Order must be '1', '2', or 'T'.")
 
-    l = len(indices)
-
+    y_pos = np.arange(len(labels))
+    plt.barh(y_pos, indices, xerr=errors, align='center', alpha=0.7, capsize=5, color = 'dodgerblue')
+    plt.yticks(y_pos, labels)
+    plt.xlabel('Sobol Index')
     plt.title(title)
-    plt.ylim([-0.2, len(indices) - 1 + 0.2])
-    plt.yticks(range(l), params)
-    plt.errorbar(indices, range(l), xerr=errors, linestyle='None', marker='o')
-    plt.axvline(0, c='k')
-
-for Si_var in Si:
-    # First order
-    plot_index(Si_var, problem['names'], '1', 'First order sensitivity')
+    plt.axvline(0, color='black', linewidth=0.8)
+    plt.grid(True, axis='x', linestyle='--', alpha=0.5)
+    plt.tight_layout()
     plt.show()
 
-    # Second order
-    plot_index(Si_var, problem['names'], '2', 'Second order sensitivity')
-    plt.show()
+plot_index(Si, problem['names'], '1', 'First-order Sensitivity')
+plot_index(Si, problem['names'], '2', 'Second-order Sensitivity')
+plot_index(Si, problem['names'], 'T', 'Total-order Sensitivity')
 
-    # Total order
-    plot_index(Si_var, problem['names'], 'T', 'Total order sensitivity')
-    plt.show()

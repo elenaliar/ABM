@@ -15,7 +15,6 @@ class Household(Agent):
         self.environmental_consciousness = 0
         self.education_level = 0 # 1: low education, 2: high school, 3: university
         self.type = 0 # 1: house, 2:apartment
-        self.future_awareness = 0
         self.solar_panels = 0 # 0: no solar panels, 1: solar panels installed
         self.subsidy = 0 # 0: no subsidy, 1: subsidy received
 
@@ -51,31 +50,24 @@ class Household(Agent):
             include_center = False
         return grid.get_neighbors(self.pos, include_center)
     
-    def utility(self, grid, citymodel):
+    def utility(self, grid, citymodel, beta1, beta2, beta3, beta4, beta5, beta6, beta7):
         """Calculate the utility of the household based on income, environmental consciousness, and stubbornness factor"""
         # Utility function can be defined here
         neighbours = self.get_neighbours(grid)
         solar_neighbors = [n for n in neighbours if n.solar_panels == 1]
         fraction_with_solar = len(solar_neighbors) / len(neighbours) if neighbours else 0
-        beta1 = 0.4
-        beta2 = 0.1
-        beta3 = 0.25
-        beta4 = 0.25
-        beta5 = 0.35
-        beta6 = 0.10
-        beta7 = 0.65
 
         noise = np.random.normal(0, 0.5) # Creating noise from a normal distribution
 
         utility = beta1 * (self.income / 3) + beta2 * self.environmental_consciousness  + beta3 * fraction_with_solar - beta4 * self.stubborness_factor + beta5 * (self.education_level/3) + beta6 * self.subsidy * citymodel.subsidy + beta7 * (1 - self.type) + noise
         return utility
     
-    def step(self, grid, citymodel):
+    def step(self, grid, citymodel, beta1, beta2, beta3, beta4, beta5, beta6, beta7):
         """Define the step function for the household agent"""
         # get neighbors with solar panels
         if self.solar_panels == 1:
             return
-        utility = self.utility(grid, citymodel)
+        utility = self.utility(grid, citymodel, beta1, beta2, beta3, beta4, beta5, beta6, beta7)
         # Input utility into a standard normal distribution to get probability of installation
         prob_installation = norm.cdf(utility)
 
