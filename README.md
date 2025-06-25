@@ -58,3 +58,9 @@ Each agent calculates a **utility score (U)** based on weighted contributions fr
 
 The utility is mapped to an adoption probability using the **standard normal CDF**.  
 An agent adopts solar panels if this probability exceeds `0.98`.
+
+## Setup & Installation
+1. Clone the repository:
+   ```bash
+   git clone <your-repo-url>
+   cd <your-project-folder>
