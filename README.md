@@ -62,5 +62,10 @@ An agent adopts solar panels if this probability exceeds `0.98`.
 ## Setup & Installation
 1. Clone the repository:
    ```bash
-   git clone <your-repo-url>
+   git clone https://github.com/elenaliar/ABM.git
    cd <your-project-folder>
+   ```
+ 2. Install the required packages:
+  ```bash
+    pip install -r requirements.txt
+    ```
