@@ -41,7 +41,7 @@ def plot_index(Si, params, order, title=''):
     plt.axvline(0, color='black', linewidth=0.8)
     plt.grid(True, axis='x', linestyle='--', alpha=0.5)
     plt.tight_layout()
-    plt.savefig(f"sensitivity_{order}_order.png")
+    plt.savefig(f"plots/sensitivity_{order}_order.png")
     plt.show()
 
 
@@ -69,5 +69,18 @@ def plot_second_order_heatmap(Si, params, title='Second-order Sobol Indices'):
                 cbar_kws={'label': 'Second-order Sobol Index'})
     plt.title(title)
     plt.tight_layout()
-    plt.savefig("second_order_sobol_heatmap.png")
+    plt.savefig("plots/second_order_sobol_heatmap.png")
     plt.show()
+
+def plot_sensitivity_indices(Si, parameter_names):
+    """
+    Generate plots for first-order, second-order, and total-order Sobol sensitivity indices.
+
+    Args:
+        Si (dict): Sobol indices dictionary.
+        parameter_names (list): List of parameter names.
+    """
+    plot_index(Si, parameter_names, '1', 'First-order Sensitivity')
+    plot_index(Si, parameter_names, '2', 'Second-order Sensitivity')
+    plot_index(Si, parameter_names, 'T', 'Total-order Sensitivity')
+    plot_second_order_heatmap(Si, parameter_names)
