@@ -88,3 +88,42 @@ To run different parts of the model, use the following scripts:
    ```bash
    python sa.py
    ```
+### Running the Model with Custom Parameters
+
+You can customize the simulation parameters directly from the command line using the available arguments. For example:
+
+```bash
+python <script_filename>.py --width 120 --height 120 --num_agents 10000 --subsidy_timestep 0 --max_steps 500 --beta1 0.4 --beta2 0.1 --beta3 0.55 --beta4 0.25 --beta5 0.35 --beta6 0.4 --beta7 0.7
+
+#### Command Line Arguments for Model Parameters
+
+\begin{tabular}{|l|p{10cm}|c|}
+\hline
+\textbf{Argument} & \textbf{Explanation} & \textbf{Default Value} \\
+\hline
+\texttt{--width} & Width of the simulation grid. Determines the horizontal size of the environment. & 120 \\
+\hline
+\texttt{--height} & Height of the simulation grid. Determines the vertical size of the environment. & 120 \\
+\hline
+\texttt{--num\_agents} & Number of agents in the model. Defines the population size of the simulation. & 10000 \\
+\hline
+\texttt{--subsidy\_timestep} & The simulation timestep when subsidy is introduced. & 0 \\
+\hline
+\texttt{--max\_steps} & Total number of simulation steps to run. Controls the duration of the simulation. & 1000 \\
+\hline
+\texttt{--beta1} & Weight for \textbf{income influence} on solar panel adoption. Higher values increase adoption likelihood for higher-income agents. & 0.35 \\
+\hline
+\texttt{--beta2} & Weight for \textbf{environmental consciousness} impact. Reflects how much agents care about the environment. & 0.05 \\
+\hline
+\texttt{--beta3} & Weight for \textbf{neighbor solar adoption influence}. Represents peer effects on adoption decisions. & 0.5 \\
+\hline
+\texttt{--beta4} & Weight for \textbf{stubbornness} or resistance to change. Higher values decrease adoption likelihood despite other factors. & 0.2 \\
+\hline
+\texttt{--beta5} & Weight for \textbf{education level} impact on adoption. Reflects the effect of education on solar panel uptake. & 0.3 \\
+\hline
+\texttt{--beta6} & Weight for \textbf{subsidy presence} impact. Models how subsidy availability influences adoption decisions. & 0.3 \\
+\hline
+\texttt{--beta7} & Weight for \textbf{housing type} influence (house vs apartment). Reflects differences in adoption likelihood based on dwelling type. & 0.6 \\
+\hline
+\end{tabular}
+
