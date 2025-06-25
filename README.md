@@ -94,6 +94,7 @@ You can customize the simulation parameters directly from the command line using
 
 ```bash
 python <script_filename>.py --width 120 --height 120 --num_agents 10000 --subsidy_timestep 0 --max_steps 500 --beta1 0.4 --beta2 0.1 --beta3 0.55 --beta4 0.25 --beta5 0.35 --beta6 0.4 --beta7 0.7
+```
 
 #### Command Line Arguments for Model Parameters
 
