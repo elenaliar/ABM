@@ -98,33 +98,20 @@ python <script_filename>.py --width 120 --height 120 --num_agents 10000 --subsid
 
 #### Command Line Arguments for Model Parameters
 
-\begin{tabular}{|l|p{10cm}|c|}
-\hline
-\textbf{Argument} & \textbf{Explanation} & \textbf{Default Value} \\
-\hline
-\texttt{--width} & Width of the simulation grid. Determines the horizontal size of the environment. & 120 \\
-\hline
-\texttt{--height} & Height of the simulation grid. Determines the vertical size of the environment. & 120 \\
-\hline
-\texttt{--num\_agents} & Number of agents in the model. Defines the population size of the simulation. & 10000 \\
-\hline
-\texttt{--subsidy\_timestep} & The simulation timestep when subsidy is introduced. & 0 \\
-\hline
-\texttt{--max\_steps} & Total number of simulation steps to run. Controls the duration of the simulation. & 1000 \\
-\hline
-\texttt{--beta1} & Weight for \textbf{income influence} on solar panel adoption. Higher values increase adoption likelihood for higher-income agents. & 0.35 \\
-\hline
-\texttt{--beta2} & Weight for \textbf{environmental consciousness} impact. Reflects how much agents care about the environment. & 0.05 \\
-\hline
-\texttt{--beta3} & Weight for \textbf{neighbor solar adoption influence}. Represents peer effects on adoption decisions. & 0.5 \\
-\hline
-\texttt{--beta4} & Weight for \textbf{stubbornness} or resistance to change. Higher values decrease adoption likelihood despite other factors. & 0.2 \\
-\hline
-\texttt{--beta5} & Weight for \textbf{education level} impact on adoption. Reflects the effect of education on solar panel uptake. & 0.3 \\
-\hline
-\texttt{--beta6} & Weight for \textbf{subsidy presence} impact. Models how subsidy availability influences adoption decisions. & 0.3 \\
-\hline
-\texttt{--beta7} & Weight for \textbf{housing type} influence (house vs apartment). Reflects differences in adoption likelihood based on dwelling type. & 0.6 \\
-\hline
-\end{tabular}
+| Argument          | Explanation                                                                                          | Default |
+|-------------------|----------------------------------------------------------------------------------------------------|---------|
+| `--width`         | Width of the simulation grid. Determines the horizontal size of the environment.                    | 120     |
+| `--height`        | Height of the simulation grid. Determines the vertical size of the environment.                     | 120     |
+| `--num_agents`    | Number of agents in the model. Defines the population size of the simulation.                       | 10000   |
+| `--subsidy`       | Whether or not the governemnt provides subsidies                                                   | 0       |
+| `--subsidy_timestep` | The simulation timestep when subsidy is introduced.                                             | 0       |
+| `--max_steps`     | Total number of simulation steps to run. Controls the duration of the simulation.                   | 1000    |
+| `--beta1`         | Weight for **income influence** on solar panel adoption. Higher values increase adoption likelihood for higher-income agents. | 0.35    |
+| `--beta2`         | Weight for **environmental consciousness** impact. Reflects how much agents care about the environment. | 0.05    |
+| `--beta3`         | Weight for **neighbor solar adoption influence**. Represents peer effects on adoption decisions.   | 0.5     |
+| `--beta4`         | Weight for **stubbornness** or resistance to change. Higher values decrease adoption likelihood despite other factors. | 0.2     |
+| `--beta5`         | Weight for **education level** impact on adoption. Reflects the effect of education on solar panel uptake. | 0.3     |
+| `--beta6`         | Weight for **subsidy presence** impact. Models how subsidy availability influences adoption decisions. | 0.3     |
+| `--beta7`         | Weight for **housing type** influence (house vs apartment). Reflects differences in adoption likelihood based on dwelling type. | 0.6     |
+
 
