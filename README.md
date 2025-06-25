@@ -66,6 +66,13 @@ An agent adopts solar panels if this probability exceeds `0.98`.
    cd <your-project-folder>
    ```
  2. Install the required packages:
-  ```bash
+    ```bash
     pip install -r requirements.txt
     ```
+    
+### How to Run the Project 
+To run different parts of the model, use the following scripts:
+```bash # 1. Simulate and analyze emergent statistics (with and without subsidy) python run_emergence.py
+# 2. Launcrun.pyinteractive Mesa visualization python server.py
+# 3. Run simulations and get solar panel adoption stats
+# (per income level and household type) python run.py
