@@ -73,9 +73,9 @@ An agent adopts solar panels if this probability exceeds `0.98`.
 ### How to Run the Project 
 To run different parts of the model, use the following scripts:
 1. Simulate and analyze emergent statistics (with and without subsidy)
-  ```bash
-  python run_emergence.py
-  ```
+   ```bash
+   python run_emergence.py
+   ```
 2. Launch interactive Mesa visualization
    ```bash
    python server.py
