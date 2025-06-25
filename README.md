@@ -84,3 +84,7 @@ To run different parts of the model, use the following scripts:
    ```bash
    python run.py
    ```
+4. Do global sensitivity analysis with Sobol indices
+   ```bash
+   python sa.py
+   ```
