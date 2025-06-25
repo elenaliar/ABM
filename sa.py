@@ -7,7 +7,7 @@ from IPython.display import clear_output
 from visualize_funcs import plot_index, plot_second_order_heatmap
 
 
-# Define the Sobol problem with 7 parameters, each ranging from 0 to 1
+# # Define the Sobol problem with 7 parameters, each ranging from 0 to 1
 problem = {
     'num_vars': 7,
     'names': [
@@ -29,7 +29,6 @@ problem = {
         [0, 1]       # beta7
     ]
 }
-
 
 distinct_samples = 64
 replicates = 5
@@ -105,6 +104,7 @@ df = pd.DataFrame(results)
 df.to_csv("sobol_sensitivity_results.csv", index=False)
 
 # Perform Sobol sensitivity analysis on total solar panels output
+
 Si = sobol.analyze(problem, df["Total Solar Panels"].values, calc_second_order=True)
 print("First-order indices:", Si['S1'])
 print("Second-order indices:", Si['S2'])

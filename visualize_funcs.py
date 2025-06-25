@@ -13,7 +13,7 @@ def plot_index(Si, params, order, title=''):
         order (str): '1' for first-order, '2' for second-order, 'T' for total-order.
         title (str): Plot title.
     """
-    plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(8, 6))
     
     if order == '2':
         # Second-order indices
@@ -34,13 +34,14 @@ def plot_index(Si, params, order, title=''):
         raise ValueError("Order must be '1', '2', or 'T'.")
 
     y_pos = np.arange(len(labels))
-    plt.barh(y_pos, indices, xerr=errors, align='center', alpha=0.7, capsize=5, color = 'dodgerblue')
+    plt.barh(y_pos, indices, xerr=errors, align='center', alpha=0.7, capsize=5, color = 'yellowgreen')
     plt.yticks(y_pos, labels)
     plt.xlabel('Sobol Index')
     plt.title(title)
     plt.axvline(0, color='black', linewidth=0.8)
     plt.grid(True, axis='x', linestyle='--', alpha=0.5)
     plt.tight_layout()
+    plt.savefig(f"sensitivity_{order}_order.png")
     plt.show()
 
 
@@ -61,11 +62,12 @@ def plot_second_order_heatmap(Si, params, title='Second-order Sobol Indices'):
     sns.heatmap(S2, 
                 xticklabels=params, 
                 yticklabels=params, 
-                cmap='coolwarm', 
+                cmap="rocket", 
                 mask=mask, 
                 annot=True, 
                 fmt=".2f", 
                 cbar_kws={'label': 'Second-order Sobol Index'})
     plt.title(title)
     plt.tight_layout()
+    plt.savefig("second_order_sobol_heatmap.png")
     plt.show()

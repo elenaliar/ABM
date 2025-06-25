@@ -4,6 +4,7 @@ from grid import Grid
 from mesa.time import RandomActivation 
 from mesa.datacollection import DataCollector
 import random
+from emergence_analysis import compute_global_adoption, compute_clustering_score, compute_morans_I, gini_between_income_classes
 
 random.seed(42)  # For reproducibility
 
@@ -58,6 +59,10 @@ class CityModel(Model):
             "High Income Solar House": lambda m: sum(1 for a in m.schedule.agents if a.income == 3 and a.solar_panels == 1 and a.type == 1),
             "High Income Solar Apartment": lambda m: sum(1 for a in m.schedule.agents if a.income == 3 and a.solar_panels == 1 and a.type == 2),
             "Total Solar Panels": lambda m: sum(a.solar_panels for a in m.schedule.agents),
+            "Global Adoption Rate": compute_global_adoption,
+            "Clustering Score": compute_clustering_score,
+            "Moran's I": compute_morans_I,
+            "Between-Class Gini": gini_between_income_classes
             }
         )
 
