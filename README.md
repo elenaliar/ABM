@@ -106,6 +106,7 @@ python <script_filename>.py --width 120 --height 120 --num_agents 10000 --subsid
 | `--subsidy`       | Whether or not the governemnt provides subsidies                                                   | 0       |
 | `--subsidy_timestep` | The simulation timestep when subsidy is introduced.                                             | 0       |
 | `--max_steps`     | Total number of simulation steps to run. Controls the duration of the simulation.                   | 1000    |
+| `--flag_random`    | Flag that shows whether or not the grid generated is random(1) or based on the 11 heterogeneous neighborhouds(0)     | 0|
 | `--beta1`         | Weight for **income influence** on solar panel adoption. Higher values increase adoption likelihood for higher-income agents. | 0.35    |
 | `--beta2`         | Weight for **environmental consciousness** impact. Reflects how much agents care about the environment. | 0.05    |
 | `--beta3`         | Weight for **neighbor solar adoption influence**. Represents peer effects on adoption decisions.   | 0.5     |
