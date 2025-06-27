@@ -6,7 +6,7 @@ from mesa.datacollection import DataCollector
 import random
 from emergence_analysis import compute_global_adoption, compute_clustering_score, compute_morans_I, gini_between_income_classes
 
-random.seed(42)  # For reproducibility
+#random.seed(42)  # For reproducibility
 
 class CityModel(Model):
     """ A city simulation model using the Mesa framework to represent households' decisions to adopt solar panels
@@ -189,7 +189,7 @@ class CityModel(Model):
         """Run the model for a specified number of steps."""
         for i in range(steps):
             self.step()
-            print(f"Step {i + 1}/{steps} completed.")
+            #print(f"Step {i + 1}/{steps} completed.")
             if not self.running:
                 break
 

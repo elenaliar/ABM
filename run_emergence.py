@@ -2,6 +2,9 @@ import argparse
 from city import CityModel
 import matplotlib.pyplot as plt
 import warnings
+from scipy.stats import norm
+import numpy as np
+import pandas as pd
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 
@@ -26,6 +29,7 @@ def run_model_comparison(args):
         beta7=args.beta7,
     )
 
+
     model_without_subsidy = CityModel(
         width=args.width,
         height=args.height,
@@ -44,39 +48,101 @@ def run_model_comparison(args):
 
     # Run both models
     model_with_subsidy.run_model(steps=args.max_steps)
+    print("Model with subsidy completed.")
     model_without_subsidy.run_model(steps=args.max_steps)
+    print("Model without subsidy completed.")
 
     # Create DataFrames
     df_with = model_with_subsidy.datacollector.get_model_vars_dataframe()
     df_without = model_without_subsidy.datacollector.get_model_vars_dataframe()
 
-    # Save CSVs
-    df_with.to_csv("csv/results_with_subsidy.csv", index=False)
-    df_without.to_csv("csv/results_without_subsidy.csv", index=False)
+    return df_with, df_without
 
-    # Plot emergence metrics
+def run_multiple_times(args):
+
+    z = norm.ppf(0.975)  # for 95% confidence interval
+    n_runs = 50          # number of replicates
+
+    # Collect all replicates
+    dfs_with = []
+    dfs_without = []
+
+    for i in range(n_runs):
+        print(f"Running replicate {i+1}/{n_runs}")
+        df_with, df_without = run_model_comparison(args)
+        
+        dfs_with.append(df_with.reset_index(drop=True))
+        dfs_without.append(df_without.reset_index(drop=True))
+    return dfs_with, dfs_without, z, n_runs
+
+def compute_mean_ci(dfs, z, n_runs):
+    combined = pd.concat(dfs, axis=1)
+    # Group columns: each metric appears n_runs times, so we average every n-th column set
+    means = pd.concat([combined.iloc[:, i::len(dfs[0].columns)].mean(axis=1) for i in range(len(dfs[0].columns))], axis=1)
+    stds = pd.concat([combined.iloc[:, i::len(dfs[0].columns)].std(axis=1) for i in range(len(dfs[0].columns))], axis=1)
+    cis = z * stds / np.sqrt(n_runs)
+    means.columns = dfs[0].columns
+    cis.columns = dfs[0].columns
+    return means, cis
+
+def plot_results(mean_with, mean_without, ci_with, ci_without):
     plt.figure(figsize=(8, 6))
-    plt.plot(df_with['Global Adoption Rate'], label='Global Adoption Rate With', color='olivedrab')
-    plt.plot(df_without['Global Adoption Rate'], label='Global Adoption Rate Without', color='yellowgreen')
-    plt.plot(df_with["Moran's I"], label='Moran\'s I With', color='firebrick')
-    plt.plot(df_without["Moran's I"], label='Moran\'s I Without', color='tomato')
-    plt.title("Emergence Metrics Comparison: With vs Without Subsidy")
+    plt.plot(mean_with['Global Adoption Rate'], label='Global Adoption Rate With Subsidy', color='olivedrab')
+    plt.plot(mean_without['Global Adoption Rate'], label='Global Adoption Rate Without Subsidy', color='yellowgreen')
+    plt.plot(mean_with["Moran's I"], label="Moran's I With Subsidy", color='firebrick')
+    plt.plot(mean_without["Moran's I"], label="Moran's I Without Subsidy", color='tomato')
+
+    # CI bands
+    plt.fill_between(mean_with.index,
+                    mean_with['Global Adoption Rate'] - ci_with['Global Adoption Rate'],
+                    mean_with['Global Adoption Rate'] + ci_with['Global Adoption Rate'],
+                    color='olivedrab', alpha=0.2)
+
+    plt.fill_between(mean_without.index,
+                    mean_without['Global Adoption Rate'] - ci_without['Global Adoption Rate'],
+                    mean_without['Global Adoption Rate'] + ci_without['Global Adoption Rate'],
+                    color='yellowgreen', alpha=0.2)
+
+    plt.fill_between(mean_with.index,
+                    mean_with["Moran's I"] - ci_with["Moran's I"],
+                    mean_with["Moran's I"] + ci_with["Moran's I"],
+                    color='firebrick', alpha=0.2)
+
+    plt.fill_between(mean_without.index,
+                    mean_without["Moran's I"] - ci_without["Moran's I"],
+                    mean_without["Moran's I"] + ci_without["Moran's I"],
+                    color='tomato', alpha=0.2)
+
+    plt.title("Emergence Metrics: With vs Without Subsidy")
     plt.xlabel("Time Steps")
     plt.ylabel("Metric Value")
     plt.legend()
-    plt.savefig("plots/emergence_metrics_comparison.png")
+    plt.savefig("plots/emergence_metrics_comparison3.png")
     plt.show()
 
     plt.figure(figsize=(8, 6))
-    plt.plot(df_with['Between-Class Gini'], label='Gini Coefficient With', color='royalblue')
-    plt.plot(df_without['Between-Class Gini'], label='Gini Coefficient Without', color='cornflowerblue')
+
+    plt.plot(mean_with['Between-Class Gini'], label='Gini Coefficient With Subsidy', color='royalblue')
+    plt.plot(mean_without['Between-Class Gini'], label='Gini Coefficient Without Subsidy', color='cornflowerblue')
+
+    plt.fill_between(mean_with.index,
+                    mean_with['Between-Class Gini'] - ci_with['Between-Class Gini'],
+                    mean_with['Between-Class Gini'] + ci_with['Between-Class Gini'],
+                    color='royalblue', alpha=0.2)
+
+    plt.fill_between(mean_without.index,
+                    mean_without['Between-Class Gini'] - ci_without['Between-Class Gini'],
+                    mean_without['Between-Class Gini'] + ci_without['Between-Class Gini'],
+                    color='cornflowerblue', alpha=0.2)
+
     plt.title("Gini Coefficient: With vs Without Subsidy")
     plt.xlabel("Time Steps")
     plt.ylabel("Gini Coefficient")
     plt.legend()
-    plt.savefig("plots/gini_coefficient_comparison.png")
+    plt.savefig("plots/gini_coefficient_comparison3.png")
     plt.show()
 
+     
 def main():
     parser = argparse.ArgumentParser(description="Run the solar panel adoption ABM with customizable parameters.")
     
@@ -96,7 +162,10 @@ def main():
     parser.add_argument('--beta7', type=float, default=0.6, help='Weight for housing type')
 
     args = parser.parse_args()
-    run_model_comparison(args)
+    dfs_with, dfs_without, z, n_runs = run_multiple_times(args)
+    means_with, ci_with = compute_mean_ci(dfs_with, z, n_runs)
+    means_without, ci_without = compute_mean_ci(dfs_without, z, n_runs)
+    plot_results(means_with, means_without, ci_with, ci_without)
 
 if __name__ == "__main__":
     main()
