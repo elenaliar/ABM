@@ -12,6 +12,7 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
    collects results, and generates visualizations comparing the emergent phenomena of the two scenarios."""
 
 def run_model_comparison(args):
+    """    Run the CityModel simulation with and without subsidies, collecting results for comparison."""
     # Initialize models with and without subsidies
     model_with_subsidy = CityModel(
         width=args.width,
@@ -59,7 +60,7 @@ def run_model_comparison(args):
     return df_with, df_without
 
 def run_multiple_times(args):
-
+    """Run the model comparison multiple times to collect replicates."""
     z = norm.ppf(0.975)  # for 95% confidence interval
     n_runs = 50          # number of replicates
 
@@ -76,6 +77,7 @@ def run_multiple_times(args):
     return dfs_with, dfs_without, z, n_runs
 
 def compute_mean_ci(dfs, z, n_runs):
+    """Compute mean and confidence intervals for the collected DataFrames."""
     combined = pd.concat(dfs, axis=1)
     # Group columns: each metric appears n_runs times, so we average every n-th column set
     means = pd.concat([combined.iloc[:, i::len(dfs[0].columns)].mean(axis=1) for i in range(len(dfs[0].columns))], axis=1)
@@ -86,6 +88,7 @@ def compute_mean_ci(dfs, z, n_runs):
     return means, cis
 
 def plot_results(mean_with, mean_without, ci_with, ci_without):
+    """Plot the results comparing the two scenarios."""
     plt.figure(figsize=(8, 6))
     plt.plot(mean_with['Global Adoption Rate'], label='Global Adoption Rate With Subsidy', color='olivedrab')
     plt.plot(mean_without['Global Adoption Rate'], label='Global Adoption Rate Without Subsidy', color='yellowgreen')
@@ -117,7 +120,7 @@ def plot_results(mean_with, mean_without, ci_with, ci_without):
     plt.xlabel("Time Steps")
     plt.ylabel("Metric Value")
     plt.legend()
-    plt.savefig("plots/emergence_metrics_comparison3.png")
+    plt.savefig("plots/emergence_metrics_comparison.png")
     plt.show()
 
     plt.figure(figsize=(8, 6))
@@ -139,7 +142,7 @@ def plot_results(mean_with, mean_without, ci_with, ci_without):
     plt.xlabel("Time Steps")
     plt.ylabel("Gini Coefficient")
     plt.legend()
-    plt.savefig("plots/gini_coefficient_comparison3.png")
+    plt.savefig("plots/gini_coefficient_comparison.png")
     plt.show()
 
      
