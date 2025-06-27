@@ -13,7 +13,7 @@ class CityModel(Model):
     based on income, education, environmental consciousness, government subsidies, and social dynamics. """
 
     def __init__(self, width=120, height=120, num_agents=10000, subsidy=1, subsidy_timestep=0, max_steps=200, beta1 = 0.35,
-        beta2 = 0.05, beta3 = 0.5, beta4 = 0.2, beta5 = 0.3, beta6 = 0.3, beta7 = 0.6):
+        beta2 = 0.05, beta3 = 0.5, beta4 = 0.2, beta5 = 0.3, beta6 = 0.3, beta7 = 0.6, flag_random=0):
         """
         Initialize the CityModel.
 
@@ -65,93 +65,141 @@ class CityModel(Model):
             "Between-Class Gini": gini_between_income_classes
             }
         )
-
-        # 11 neighborhoods with different income distributions and spatial geometry
-        neighborhoods = [
-            {"x_range": (0, 84), "y_range": (0, 64), "income_dist": [1, 2, 3], "weights": [0.85, 0.15, 0.0]},     
-            {"x_range": (84, 120), "y_range": (66, 120), "income_dist": [1, 2, 3], "weights": [0.6, 0.39, 0.01]},     
-            {"x_range": (0, 39), "y_range": (38, 64), "income_dist": [1, 2, 3], "weights": [0.75, 0.25, 0.0]},    
-            {"x_range": (39, 51), "y_range": (46, 64), "income_dist": [2, 3, 1], "weights": [0.7, 0.2, 0.1]},    
-            {"x_range": (39, 51), "y_range": (38, 46), "income_dist": [2, 1, 3], "weights": [0.7, 0.2, 0.1]},   
-            {"x_range": (51, 57), "y_range": (38, 42), "income_dist": [2, 3, 1], "weights": [0.7, 0.2, 0.1]},   
-            {"x_range": (51, 94), "y_range": (42, 64), "income_dist": [3, 2, 1], "weights": [0.7, 0.3, 0.0]},    
-            {"x_range": (94, 120), "y_range": (42, 66), "income_dist": [2, 1, 3], "weights": [0.7, 0.1, 0.2]},    
-            {"x_range": (57, 120), "y_range": (0, 42), "income_dist": [3, 2, 1], "weights": [0.7, 0.3, 0.0]},    
-            {"x_range": (0, 84), "y_range": (64, 66), "income_dist": [3, 2, 1], "weights": [0.7, 0.3, 0.0]}, 
-            {"x_range": (0, 84), "y_range": (64, 120), "income_dist": [2, 3, 1], "weights": [0.7, 0.2, 0.1]} 
-        ]
-
-
-        for n in neighborhoods:
-            x_min, x_max = n["x_range"]
-            y_min, y_max = n["y_range"]
-            n["area"] = (x_max - x_min) * (y_max - y_min)
-
-        total_area = sum(n["area"] for n in neighborhoods)
-        area_weights = [n["area"] / total_area for n in neighborhoods]
+     
+        if flag_random == 0:
+            # 11 neighborhoods with different income distributions and spatial geometry
+            neighborhoods = [
+                {"x_range": (0, 84), "y_range": (0, 64), "income_dist": [1, 2, 3], "weights": [0.85, 0.15, 0.0]},     
+                {"x_range": (84, 120), "y_range": (66, 120), "income_dist": [1, 2, 3], "weights": [0.6, 0.39, 0.01]},     
+                {"x_range": (0, 39), "y_range": (38, 64), "income_dist": [1, 2, 3], "weights": [0.75, 0.25, 0.0]},    
+                {"x_range": (39, 51), "y_range": (46, 64), "income_dist": [2, 3, 1], "weights": [0.7, 0.2, 0.1]},    
+                {"x_range": (39, 51), "y_range": (38, 46), "income_dist": [2, 1, 3], "weights": [0.7, 0.2, 0.1]},   
+                {"x_range": (51, 57), "y_range": (38, 42), "income_dist": [2, 3, 1], "weights": [0.7, 0.2, 0.1]},   
+                {"x_range": (51, 94), "y_range": (42, 64), "income_dist": [3, 2, 1], "weights": [0.7, 0.3, 0.0]},    
+                {"x_range": (94, 120), "y_range": (42, 66), "income_dist": [2, 1, 3], "weights": [0.7, 0.1, 0.2]},    
+                {"x_range": (57, 120), "y_range": (0, 42), "income_dist": [3, 2, 1], "weights": [0.7, 0.3, 0.0]},    
+                {"x_range": (0, 84), "y_range": (64, 66), "income_dist": [3, 2, 1], "weights": [0.7, 0.3, 0.0]}, 
+                {"x_range": (0, 84), "y_range": (64, 120), "income_dist": [2, 3, 1], "weights": [0.7, 0.2, 0.1]} 
+            ]
 
 
-        next_id = 0  # track agent IDs
+            for n in neighborhoods:
+                x_min, x_max = n["x_range"]
+                y_min, y_max = n["y_range"]
+                n["area"] = (x_max - x_min) * (y_max - y_min)
 
-        while next_id < self.num_agents:
-            # Select neighborhood based on area weight
-            neighborhood = random.choices(neighborhoods, weights=area_weights, k=1)[0]
-            x_min, x_max = neighborhood["x_range"]
-            y_min, y_max = neighborhood["y_range"]
+            total_area = sum(n["area"] for n in neighborhoods)
+            area_weights = [n["area"] / total_area for n in neighborhoods]
 
-            # Random position within the selected neighborhood
-            x = self.random.randrange(x_min, x_max)
-            y = self.random.randrange(y_min, y_max)
 
-            agent = Household(next_id, self)
-            # Set income level based on neighborhood distribution
-            income = random.choices(neighborhood["income_dist"], weights=neighborhood["weights"])[0]
-            agent.set_income(income)
-            # Random environmental & behavioral traits
-            agent.set_environmental_consciousness(random.uniform(0, 1))
-            agent.set_stubborness_factor(random.uniform(0, 1))
+            next_id = 0  # track agent IDs
 
-            # Set education and housing type based on income
-            if income == 1:
-                education = random.choices([1, 2, 3], weights=[0.1, 0.6, 0.3])[0]
-                agent_type = random.choices([1, 2], weights=[0.2, 0.8])[0]
-            elif income == 2:
-                education = random.choices([1, 2, 3], weights=[0.05, 0.2, 0.75])[0]
-                agent_type = random.choices([1, 2], weights=[0.5, 0.5])[0]
-            else:
-                education = random.choices([1, 2, 3], weights=[0.01, 0.1, 0.89])[0]
-                agent_type = random.choices([1, 2], weights=[0.8, 0.2])[0]
+            while next_id < self.num_agents:
+                # Select neighborhood based on area weight
+                neighborhood = random.choices(neighborhoods, weights=area_weights, k=1)[0]
+                x_min, x_max = neighborhood["x_range"]
+                y_min, y_max = neighborhood["y_range"]
 
-            agent.set_education_level(education)
-            agent.set_subsidy(0)
-            placed = False
-            max_tries = 100
-            for _ in range(max_tries):
+                # Random position within the selected neighborhood
                 x = self.random.randrange(x_min, x_max)
                 y = self.random.randrange(y_min, y_max)
-                contents = self.grid.get_cell_list_contents((x, y))
 
-                if agent_type == 1: # House: cell must be empty
-                    if not contents:
-                        placed = True
-                        break
-                elif agent_type == 2: # Apartment: can share cell with other apartments
-                    if all(a.type == 2 for a in contents):
-                        placed = True
-                        break
-            if not placed:
-                continue  
+                agent = Household(next_id, self)
+                # Set income level based on neighborhood distribution
+                income = random.choices(neighborhood["income_dist"], weights=neighborhood["weights"])[0]
+                agent.set_income(income)
+                # Random environmental & behavioral traits
+                agent.set_environmental_consciousness(random.uniform(0, 1))
+                agent.set_stubborness_factor(random.uniform(0, 1))
 
-            agent.set_type(agent_type)
-            self.grid.place_agent(agent, (x, y))
-            self.schedule.add(agent)
-            self.incomes[income]["count"] += 1
-            if agent_type == 1:
-                self.incomes[income]["houses"] += 1
-            else:
-                self.incomes[income]["apartments"] += 1
-            next_id += 1
-        
+                # Set education and housing type based on income
+                if income == 1:
+                    education = random.choices([1, 2, 3], weights=[0.1, 0.6, 0.3])[0]
+                    agent_type = random.choices([1, 2], weights=[0.2, 0.8])[0]
+                elif income == 2:
+                    education = random.choices([1, 2, 3], weights=[0.05, 0.2, 0.75])[0]
+                    agent_type = random.choices([1, 2], weights=[0.5, 0.5])[0]
+                else:
+                    education = random.choices([1, 2, 3], weights=[0.01, 0.1, 0.89])[0]
+                    agent_type = random.choices([1, 2], weights=[0.8, 0.2])[0]
+
+                agent.set_education_level(education)
+                agent.set_subsidy(0)
+                placed = False
+                max_tries = 100
+                for _ in range(max_tries):
+                    x = self.random.randrange(x_min, x_max)
+                    y = self.random.randrange(y_min, y_max)
+                    contents = self.grid.get_cell_list_contents((x, y))
+
+                    if agent_type == 1: # House: cell must be empty
+                        if not contents:
+                            placed = True
+                            break
+                    elif agent_type == 2: # Apartment: can share cell with other apartments
+                        if all(a.type == 2 for a in contents):
+                            placed = True
+                            break
+                if not placed:
+                    continue  
+
+                agent.set_type(agent_type)
+                self.grid.place_agent(agent, (x, y))
+                self.schedule.add(agent)
+                self.incomes[income]["count"] += 1
+                if agent_type == 1:
+                    self.incomes[income]["houses"] += 1
+                else:
+                    self.incomes[income]["apartments"] += 1
+                next_id += 1
+            
+        else:
+            # Randomly place agents across the grid without neighborhood structure
+            next_id = 0
+            while next_id < self.num_agents:  
+                agent = Household(next_id, self)
+                # Randomly assign income level
+                income = self.random.choice([1, 2, 3])
+                agent.set_income(income)
+                # Random environmental & behavioral traits
+                agent.set_environmental_consciousness(self.random.uniform(0, 1))
+                agent.set_stubborness_factor(self.random.uniform(0, 1))
+
+                # Set education and housing type 
+                education = self.random.choices([1, 2, 3])[0]
+                agent_type = self.random.choices([1, 2])[0]
+                
+                agent.set_type(agent_type)
+                agent.set_education_level(education)
+                agent.set_subsidy(0)
+                
+                placed = False
+                max_tries = 100
+                for _ in range(max_tries):
+                    x = self.random.randrange(self.grid.width)
+                    y = self.random.randrange(self.grid.height)
+                    contents = self.grid.get_cell_list_contents((x,y))
+
+                    if agent_type == 1: # House: cell must be empty
+                        if not contents:
+                            placed = True
+                            break
+                    elif agent_type == 2: # Apartment: can share cell with other apartments
+                        if all(a.type == 2 for a in contents):
+                            placed = True
+                            break
+                if not placed:
+                    continue
+                
+                self.grid.place_agent(agent, (x, y))
+                self.schedule.add(agent)
+                self.incomes[income]["count"] += 1
+                if agent_type == 1:
+                    self.incomes[income]["houses"] += 1
+                else:
+                    self.incomes[income]["apartments"] += 1
+                next_id += 1
+            
         self.datacollector.collect(self)
         
     

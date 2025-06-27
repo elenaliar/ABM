@@ -40,6 +40,7 @@ def main():
     parser.add_argument('--subsidy', type=int, default=1, help='Enable subsidy (1) or not (0)')
     parser.add_argument('--subsidy_timestep', type=int, default=0, help='Timestep at which subsidy is applied')
     parser.add_argument('--max_steps', type=int, default=500, help='Number of steps the model should run')
+    parser.add_argument('--flag_random', type=int, default=0, help='Randomize grid generation(1) or not (0)')
 
     # Beta parameters
     parser.add_argument('--beta1', type=float, default=0.35, help='Weight for income')
@@ -72,6 +73,7 @@ def main():
         "beta5": args.beta5,
         "beta6": args.beta6,
         "beta7": args.beta7,
+        "flag_random": args.flag_random
     }
 
     server = ModularServer(

@@ -28,6 +28,8 @@ def parse_arguments():
     parser.add_argument('--subsidy', type=int, default=1, help='Enable subsidy (1) or not (0)')
     parser.add_argument('--subsidy_timestep', type=int, default=0, help='Time step when subsidy starts')
     parser.add_argument('--num_steps', type=int, default=200, help='Number of steps to simulate')
+    parser.add_argument('--flag_random', type=int, default=0, help='Randomize grid generation(1) or not (0)')
+
     # Beta parameters
     parser.add_argument('--beta1', type=float, default=0.35, help='Weight for income')
     parser.add_argument('--beta2', type=float, default=0.05, help='Weight for environmental consciousness')
@@ -65,6 +67,7 @@ def run_simulation(args):
         beta5=args.beta5,
         beta6=args.beta6,
         beta7=args.beta7,
+        flag_random=args.flag_random
     )
 
     for step in range(args.num_steps):

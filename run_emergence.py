@@ -28,6 +28,7 @@ def run_model_comparison(args):
         beta5=args.beta5,
         beta6=args.beta6,
         beta7=args.beta7,
+        flag_random=args.flag_random
     )
 
 
@@ -45,6 +46,7 @@ def run_model_comparison(args):
         beta5=args.beta5,
         beta6=args.beta6,
         beta7=args.beta7,
+        flag_random=args.flag_random
     )
 
     # Run both models
@@ -154,6 +156,8 @@ def main():
     parser.add_argument('--num_agents', type=int, default=10000, help='Number of agents in the model')
     parser.add_argument('--subsidy_timestep', type=int, default=0, help='Timestep at which subsidy starts')
     parser.add_argument('--max_steps', type=int, default=1000, help='Number of simulation steps')
+    parser.add_argument('--flag_random', type=int, default=0, help='Randomize grid generation(1) or not (0)')
+
     
     # Beta parameters
     parser.add_argument('--beta1', type=float, default=0.35, help='Weight for income')
