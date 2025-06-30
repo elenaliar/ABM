@@ -64,7 +64,7 @@ def run_model_comparison(args):
 def run_multiple_times(args):
     """Run the model comparison multiple times to collect replicates."""
     z = norm.ppf(0.975)  # for 95% confidence interval
-    n_runs = 5          # number of replicates
+    n_runs = 50          # number of replicates
 
     # Collect all replicates
     dfs_with = []
